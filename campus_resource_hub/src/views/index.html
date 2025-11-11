@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Campus Resource Hub</h1>
+    <p class="lead">Your one-stop platform for managing campus resources.</p>
+    {% if not current_user.is_authenticated %}
+        <hr class="my-4">
+        <p>Please login to access the resource booking system.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
+    {% else %}
+        <hr class="my-4">
+        <p>Browse available resources or check your bookings.</p>
+        <p>
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('resources.search') }}" role="button">Browse Resources</a>
+            <a class="btn btn-outline-primary btn-lg" href="{{ url_for('booking.list') }}" role="button">My Bookings</a>
+        </p>
+    {% endif %}
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Book</h5>
+                <p class="card-text">Find and book resources instantly.</p>
+                <a href="{{ url_for('resources.search') }}" class="btn btn-primary">Book Now</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Dashboard</h5>
+                <p class="card-text">View your bookings and activities.</p>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Messages</h5>
+                <p class="card-text">Check your notifications and messages.</p>
+                <a href="{{ url_for('message.inbox') }}" class="btn btn-primary">View Messages</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

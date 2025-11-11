@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resource.title }} - Campus Resource Hub{% endblock %}
+
+
+{% block content %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<style>
+    #resource-calendar {
+        background-color: white;
+        border-radius: 0.375rem;
+    }
+    .fc-event {
+        cursor: pointer;
+    }
+</style>
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.search') }}">Resources</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.by_category', category=resource.category) }}">{{ resource.category }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ resource.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Resource Images Carousel -->
+        <div class="col-md-6 mb-4">
+            {% if resource_images or resource.image_url %}
+            {% set total_images = resource_images|length + (1 if resource.image_url else 0) %}
+            <div id="resourceCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="15000">
+                <div class="carousel-inner rounded">
+                    {% if resource_images %}
+                        {% for image in resource_images %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ url_for('static', filename=image.image_path) }}" class="d-block w-100" alt="{{ resource.title }}" style="max-height: 500px; object-fit: cover;">
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% if resource.image_url %}
+                        <div class="carousel-item {% if not resource_images %}active{% endif %}">
+                            <img src="{{ resource.image_url }}" class="d-block w-100" alt="{{ resource.title }}" style="max-height: 500px; object-fit: cover;">
+                        </div>
+                    {% endif %}
+                </div>
+                {% if total_images > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#resourceCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#resourceCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                <div class="carousel-indicators">
+                    {% for i in range(total_images) %}
+                    <button type="button" data-bs-target="#resourceCarousel" data-bs-slide-to="{{ i }}" {% if i == 0 %}class="active" aria-current="true"{% endif %} aria-label="Slide {{ i + 1 }}"></button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="bg-light rounded p-5 text-center">
+                <i class="fas fa-image fa-3x text-muted"></i>
+                <p class="mt-2 text-muted">No image available</p>
+            </div>
+            {% endif %}
+            
+            <!-- Calendar View -->
+            <div class="card mb-4 mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Availability Calendar</h5>
+                </div>
+                <div class="card-body">
+                    <div id="resource-calendar" style="min-height: 400px;"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <span class="badge bg-success me-2">Active</span> Active bookings
+                            <span class="badge bg-warning ms-3 me-2">Pending</span> Pending bookings
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Details -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ resource.title }}</h1>
+            
+            <div class="mb-3">
+                <span class="badge bg-primary">{{ resource.category }}</span>
+                {% if resource.is_available %}
+                <span class="badge bg-success">Available</span>
+                {% else %}
+                <span class="badge bg-danger">Unavailable</span>
+                {% endif %}
+                {% if review_count > 0 %}
+                <span class="badge bg-info">{{ rating_percentage }}% Rating ({{ review_count }} review{{ 's' if review_count != 1 else '' }})</span>
+                {% if resource.id in top_rated_ids %}
+                <span class="badge bg-warning text-dark"><i class="fas fa-star"></i> Top Rated</span>
+                {% endif %}
+                {# Lowest rated badge hidden - functionality kept for future use #}
+                {# {% if resource.id == lowest_rated_id %}
+                <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Lowest Rated</span>
+                {% endif %} #}
+                {% else %}
+                <span class="badge bg-secondary">No reviews yet</span>
+                {% endif %}
+            </div>
+
+            <p class="lead">{{ resource.description }}</p>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Resource Details</h5>
+                    <ul class="list-unstyled mb-0">
+                        {% if resource.location %}
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            Location: {{ resource.location }}
+                        </li>
+                        {% endif %}
+                        {% if resource.capacity %}
+                        <li class="mb-2">
+                            <i class="fas fa-users text-primary"></i>
+                            Capacity: {{ resource.capacity }} people
+                        </li>
+                        {% endif %}
+                        {% if resource.owner %}
+                        <li class="mb-2">
+                            <i class="fas fa-user text-primary"></i>
+                            Owner: {{ resource.owner.username }}
+                            {% if current_user.is_authenticated and current_user.id != resource.owner.id %}
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#messageOwnerModal">
+                                <i class="fas fa-envelope"></i> Message Owner
+                            </button>
+                            {% endif %}
+                        </li>
+                        {% endif %}
+                        {% if resource.equipment %}
+                        <li class="mb-2">
+                            <i class="fas fa-tools text-primary"></i>
+                            Equipment: 
+                            <ul class="list-inline d-inline mb-0">
+                                {% for item in resource.equipment.split(',') %}
+                                <li class="list-inline-item">
+                                    <span class="badge bg-secondary">{{ item.strip() }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Review Section -->
+            {% if current_user.is_authenticated %}
+            <div class="mb-3">
+                {% if user_review %}
+                <a href="{{ url_for('resources.review', id=resource.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Edit Your Review
+                </a>
+                <form method="POST" action="{{ url_for('resources.delete_review', id=resource.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete your review? This action cannot be undone.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Delete Review
+                    </button>
+                </form>
+                {% else %}
+                <a href="{{ url_for('resources.review', id=resource.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-star"></i> Leave a Review
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Reviews Section -->
+            <div class="mt-4">
+                <h3 class="mb-3">
+                    <i class="fas fa-star"></i> Reviews
+                    {% if review_count > 0 %}
+                    <small class="text-muted">({{ review_count }} total)</small>
+                    {% endif %}
+                </h3>
+                
+                {% if reviews %}
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {{ review.user.username }}
+                                        {% if review.user.first_name or review.user.last_name %}
+                                        <small class="text-muted">
+                                            ({{ review.user.first_name }} {{ review.user.last_name }})
+                                        </small>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ review.created_at|datetime }}
+                                        {% if review.updated_at != review.created_at %}
+                                        <span class="text-muted">(edited)</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    {% for i in range(1, 6) %}
+                                    {% if i <= review.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                    <i class="far fa-star text-muted"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-0">{{ review.comment }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if reviews_pagination.pages > 1 %}
+                <nav aria-label="Reviews pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if reviews_pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('resources.view', id=resource.id, page=reviews_pagination.prev_num) }}">Previous</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in reviews_pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if page_num %}
+                                {% if page_num == reviews_pagination.page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('resources.view', id=resource.id, page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if reviews_pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('resources.view', id=resource.id, page=reviews_pagination.next_num) }}">Next</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No reviews yet. Be the first to leave a review!
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Booking Section -->
+            {% if current_user.is_authenticated %}
+                {% if user_booking %}
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Your Current Booking</h5>
+                    <p>Status: <span class="badge bg-{{ user_booking.status_color }}">{{ user_booking.status }}</span></p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="{{ url_for('booking.details', id=user_booking.id) }}" class="btn btn-outline-primary btn-sm">View Booking Details</a>
+                    </p>
+                </div>
+                {% endif %}
+                
+                {% if user_waitlist %}
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">You're on the Waitlist</h5>
+                    <p>You have a pending waitlist request for this resource.</p>
+                    <p class="mb-0">
+                        <small>Requested: {{ user_waitlist.requested_start_date|datetime }} - {{ user_waitlist.requested_end_date|datetime }}</small>
+                    </p>
+                </div>
+                {% endif %}
+                
+                {% if resource.is_available and not user_booking %}
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('resources.book', id=resource.id) }}" class="btn btn-primary btn-lg">Book Now</a>
+                    {% if not user_waitlist %}
+                    <a href="{{ url_for('resources.join_waitlist', id=resource.id) }}" class="btn btn-outline-secondary">Join Waitlist</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-warning">
+                    Please <a href="{{ url_for('auth.login') }}">log in</a> to book this resource.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="bookingDetailsModalLabel">
+                    <i class="fas fa-calendar-check me-2"></i>Booking Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="fas fa-user text-primary me-2"></i>User:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span id="bookingModalUser">-</span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="fas fa-info-circle text-primary me-2"></i>Status:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="badge" id="bookingModalStatus">-</span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="fas fa-clock text-primary me-2"></i>Start Time:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span id="bookingModalStartTime">-</span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="fas fa-clock text-primary me-2"></i>End Time:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span id="bookingModalEndTime">-</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <strong><i class="fas fa-sticky-note text-primary me-2"></i>Notes:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span id="bookingModalNotes" class="text-muted">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Owner Modal -->
+{% if resource.owner and current_user.is_authenticated and current_user.id != resource.owner.id %}
+<div class="modal fade" id="messageOwnerModal" tabindex="-1" aria-labelledby="messageOwnerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageOwnerModalLabel">Message Owner: {{ resource.owner.username }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="messageOwnerForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" id="recipient_username" value="{{ resource.owner.username }}">
+                    <div class="mb-3">
+                        <label for="messageSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="messageSubject" name="subject" required placeholder="Re: {{ resource.title }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="messageBody" class="form-label">Message</label>
+                        <textarea class="form-control" id="messageBody" name="body" rows="6" required placeholder="Type your message here..."></textarea>
+                    </div>
+                    <div id="messageError" class="alert alert-danger d-none" role="alert"></div>
+                    <div id="messageSuccess" class="alert alert-success d-none" role="alert"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendMessageBtn">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('messageOwnerModal');
+    const form = document.getElementById('messageOwnerForm');
+    const sendBtn = document.getElementById('sendMessageBtn');
+    const errorDiv = document.getElementById('messageError');
+    const successDiv = document.getElementById('messageSuccess');
+    
+    // Reset form when modal is closed
+    modal.addEventListener('hidden.bs.modal', function() {
+        form.reset();
+        errorDiv.classList.add('d-none');
+        successDiv.classList.add('d-none');
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send Message';
+    });
+    
+    // Handle form submission
+    sendBtn.addEventListener('click', function() {
+        const recipient = document.getElementById('recipient_username').value;
+        const subject = document.getElementById('messageSubject').value.trim();
+        const body = document.getElementById('messageBody').value.trim();
+        
+        // Hide previous messages
+        errorDiv.classList.add('d-none');
+        successDiv.classList.add('d-none');
+        
+        // Validate
+        if (!subject || !body) {
+            errorDiv.textContent = 'Please fill in all fields.';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+        
+        // Disable button and show loading
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending...';
+        
+        // Send AJAX request
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        fetch('{{ url_for("message.send_message") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                recipient: recipient,
+                subject: subject,
+                body: body,
+                csrf_token: csrfToken
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                successDiv.textContent = data.message || 'Message sent successfully!';
+                successDiv.classList.remove('d-none');
+                form.reset();
+                // Close modal after 1.5 seconds
+                setTimeout(function() {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    bsModal.hide();
+                }, 1500);
+            } else {
+                errorDiv.textContent = data.error || 'Failed to send message. Please try again.';
+                errorDiv.classList.remove('d-none');
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Message';
+            }
+        })
+        .catch(error => {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.classList.remove('d-none');
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Message';
+        });
+    });
+{% endif %}
+</script>
+
+<script>
+    // Initialize FullCalendar for resource availability view
+    document.addEventListener('DOMContentLoaded', function() {
+        const resourceCalendarEl = document.getElementById('resource-calendar');
+        if (resourceCalendarEl) {
+            // Load FullCalendar if not already loaded
+            if (typeof FullCalendar === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js';
+                script.onload = function() {
+                    initializeResourceCalendar();
+                };
+                document.head.appendChild(script);
+            } else {
+                initializeResourceCalendar();
+            }
+        }
+        
+        function initializeResourceCalendar() {
+            const resourceCalendar = new FullCalendar.Calendar(resourceCalendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    fetch(`{{ url_for('resources.bookings_json', id=resource.id) }}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching bookings:', error);
+                            failureCallback(error);
+                        });
+                },
+            eventClick: function(info) {
+                // Prevent dateClick from firing when clicking on events
+                info.jsEvent.stopPropagation();
+                
+                // Don't show details for temporary selection events
+                if (info.event.id && info.event.id.startsWith('temp-')) {
+                    return;
+                }
+                
+                const event = info.event;
+                const user = event.extendedProps.user;
+                const status = event.extendedProps.status;
+                const notes = event.extendedProps.notes || 'No notes';
+                const startTime = event.start ? new Date(event.start).toLocaleString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }) : 'N/A';
+                const endTime = event.end ? new Date(event.end).toLocaleString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }) : 'N/A';
+                
+                // Update modal content
+                document.getElementById('bookingModalUser').textContent = user;
+                document.getElementById('bookingModalStatus').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                document.getElementById('bookingModalStatus').className = 'badge bg-' + (status === 'active' ? 'success' : status === 'pending' ? 'warning' : 'secondary');
+                document.getElementById('bookingModalStartTime').textContent = startTime;
+                document.getElementById('bookingModalEndTime').textContent = endTime;
+                document.getElementById('bookingModalNotes').textContent = notes;
+                
+                // Show modal
+                const bookingModal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+                bookingModal.show();
+            },
+            height: 'auto',
+            selectable: false,
+            eventColor: '#3788d8'
+        });
+            
+            resourceCalendar.render();
+        }
+    });
+</script>
+{% endblock %}

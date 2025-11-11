@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <div class="card">
+        <div class="card-body">
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the following errors:</strong>
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items() %}
+                        {% for error in errors %}
+                            <li>{{ form[field].label.text }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.user_id.label(class="form-label") }}
+                        {{ form.user_id(class="form-select") }}
+                        {% if form.user_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.user_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.resource_id.label(class="form-label") }}
+                        {{ form.resource_id(class="form-select") }}
+                        {% if form.resource_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.resource_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.start_date.label(class="form-label") }}
+                        {{ form.start_date(class="form-control", id="start_date") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.end_date.label(class="form-label") }}
+                        {{ form.end_date(class="form-control", id="end_date") }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
+                    {% if form.status.errors %}
+                        <div class="text-danger">
+                            {% for error in form.status.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.notes.label(class="form-label") }}
+                    {{ form.notes(class="form-control", rows=3) }}
+                </div>
+                
+                {% if booking %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recurrence Information</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if booking.recurrence_type %}
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Recurrence Type:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">{{ booking.recurrence_type|title }}</span>
+                            </dd>
+                            {% if booking.recurrence_end_date %}
+                            <dt class="col-sm-4">Recurrence Ends:</dt>
+                            <dd class="col-sm-8">{{ booking.recurrence_end_date|datetime }}</dd>
+                            {% endif %}
+                            {% if booking.parent_booking_id %}
+                            <dt class="col-sm-4">Parent Booking ID:</dt>
+                            <dd class="col-sm-8">
+                                <a href="{{ url_for('admin.edit_booking', id=booking.parent_booking_id) }}">
+                                    Booking #{{ booking.parent_booking_id }}
+                                </a>
+                            </dd>
+                            {% endif %}
+                            {% if booking.child_bookings %}
+                            <dt class="col-sm-4">Related Bookings:</dt>
+                            <dd class="col-sm-8">
+                                <ul class="list-unstyled mb-0">
+                                    {% for child in booking.child_bookings[:5] %}
+                                    <li>
+                                        <a href="{{ url_for('admin.edit_booking', id=child.id) }}">
+                                            Booking #{{ child.id }} ({{ child.start_date|datetime }})
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                    {% if booking.child_bookings|length > 5 %}
+                                    <li><small class="text-muted">... and {{ booking.child_bookings|length - 5 }} more</small></li>
+                                    {% endif %}
+                                </ul>
+                            </dd>
+                            {% endif %}
+                        </dl>
+                        {% else %}
+                        <p class="text-muted mb-0">This is a single booking (not recurring).</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.recurrence_type.label(class="form-label") }}
+                        {{ form.recurrence_type(class="form-select", id="recurrence_type") }}
+                        <small class="form-text text-muted">Change recurrence type (use with caution for existing recurring bookings)</small>
+                    </div>
+                    <div class="col-md-6 mb-3" id="recurrence_end_date_group" style="display: none;">
+                        {{ form.recurrence_end_date.label(class="form-label") }}
+                        {{ form.recurrence_end_date(class="form-control", id="recurrence_end_date") }}
+                        {% if form.recurrence_end_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.recurrence_end_date.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('admin.bookings') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().slice(0, 16);
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const recurrenceType = document.getElementById('recurrence_type');
+    const recurrenceEndDate = document.getElementById('recurrence_end_date');
+    const recurrenceEndDateGroup = document.getElementById('recurrence_end_date_group');
+    
+    if (startDate && !startDate.value) {
+        startDate.min = today;
+    }
+    if (endDate && !endDate.value) {
+        endDate.min = today;
+    }
+    if (recurrenceEndDate && !recurrenceEndDate.value) {
+        recurrenceEndDate.min = today;
+    }
+    
+    if (startDate) {
+        startDate.addEventListener('change', function() {
+            endDate.min = this.value;
+            if (endDate.value < this.value) {
+                endDate.value = this.value;
+            }
+            // Also update recurrence_end_date min
+            if (recurrenceEndDate) {
+                recurrenceEndDate.min = endDate.value || this.value;
+            }
+        });
+    }
+    
+    if (endDate) {
+        endDate.addEventListener('change', function() {
+            if (recurrenceEndDate) {
+                recurrenceEndDate.min = this.value;
+            }
+        });
+    }
+    
+    // Show/hide recurrence end date based on recurrence type
+    function toggleRecurrenceEndDate() {
+        if (recurrenceType && recurrenceType.value && recurrenceType.value !== '') {
+            recurrenceEndDateGroup.style.display = 'block';
+            // Set min date to end_date value
+            if (endDate && endDate.value && recurrenceEndDate) {
+                recurrenceEndDate.min = endDate.value;
+            }
+        } else {
+            recurrenceEndDateGroup.style.display = 'none';
+            if (recurrenceEndDate) {
+                recurrenceEndDate.value = '';
+            }
+        }
+    }
+    
+    if (recurrenceType) {
+        recurrenceType.addEventListener('change', toggleRecurrenceEndDate);
+        // Initial state
+        toggleRecurrenceEndDate();
+    }
+});
+</script>
+{% endblock %}
+

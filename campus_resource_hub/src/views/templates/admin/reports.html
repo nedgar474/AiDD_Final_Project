@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Reports{% endblock %}
+
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reports & Analytics</h1>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+        <!-- 1. Active Resources by Status -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Active Resources by Status</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="resourcesStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Total Bookings (Last 30 Days) -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Total Bookings (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingsTimelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Category Utilization Summary -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Category Utilization Summary</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryUtilizationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Average Booking Duration per Category -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Average Booking Duration per Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="avgDurationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Resource Ratings vs. Booking Volume -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resource Ratings vs. Booking Volume</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ratingsVsBookingsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Bookings per User Role -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bookings per User Role</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingsByRoleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Booking Status Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Booking Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Bookings by Department -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bookings by Department</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingsByDepartmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Resource Usage by Department -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resource Usage by Department</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="resourceUsageByDeptChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. Department Utilization Trends -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Department Utilization Trends (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="deptTrendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. Department vs. Role Cross-Analysis -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Department vs. Role Cross-Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="deptRoleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Chart.js configuration
+const chartColors = {
+    primary: 'rgba(13, 110, 253, 0.8)',
+    success: 'rgba(25, 135, 84, 0.8)',
+    danger: 'rgba(220, 53, 69, 0.8)',
+    warning: 'rgba(255, 193, 7, 0.8)',
+    info: 'rgba(13, 202, 240, 0.8)',
+    secondary: 'rgba(108, 117, 125, 0.8)'
+};
+
+// 1. Active Resources by Status - Bar Chart
+const resourcesStatusCtx = document.getElementById('resourcesStatusChart').getContext('2d');
+const statusLabels = {{ resources_status_data.labels | tojson }};
+const statusCounts = {{ resources_status_data.counts | tojson }};
+// Map status to colors: Published=green, Draft=yellow, Archived=gray
+const statusColors = statusLabels.map(label => {
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel === 'published') return chartColors.success; // green
+    if (lowerLabel === 'draft') return chartColors.warning; // yellow
+    if (lowerLabel === 'archived') return chartColors.secondary; // gray
+    return chartColors.info; // default
+});
+new Chart(resourcesStatusCtx, {
+    type: 'bar',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            label: 'Number of Resources',
+            data: statusCounts,
+            backgroundColor: statusColors
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+// 2. Total Bookings (Last 30 Days) - Line Chart
+const bookingsTimelineCtx = document.getElementById('bookingsTimelineChart').getContext('2d');
+new Chart(bookingsTimelineCtx, {
+    type: 'line',
+    data: {
+        labels: {{ bookings_timeline_data.dates | tojson }},
+        datasets: [{
+            label: 'Bookings',
+            data: {{ bookings_timeline_data.counts | tojson }},
+            borderColor: chartColors.primary,
+            backgroundColor: chartColors.primary.replace('0.8', '0.1'),
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+// 3. Category Utilization Summary - Bar Chart
+const categoryUtilizationCtx = document.getElementById('categoryUtilizationChart').getContext('2d');
+new Chart(categoryUtilizationCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ category_utilization_data.categories | tojson }},
+        datasets: [{
+            label: 'Approved Bookings',
+            data: {{ category_utilization_data.counts | tojson }},
+            backgroundColor: chartColors.info
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+// 4. Average Booking Duration per Category - Horizontal Bar Chart
+const avgDurationCtx = document.getElementById('avgDurationChart').getContext('2d');
+new Chart(avgDurationCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ avg_duration_data.categories | tojson }},
+        datasets: [{
+            label: 'Average Duration (Days)',
+            data: {{ avg_duration_data.avg_days | tojson }},
+            backgroundColor: chartColors.warning
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: { beginAtZero: true }
+        }
+    }
+});
+
+// 5. Resource Ratings vs. Booking Volume - Scatter Plot
+const ratingsVsBookingsCtx = document.getElementById('ratingsVsBookingsChart').getContext('2d');
+new Chart(ratingsVsBookingsCtx, {
+    type: 'scatter',
+    data: {
+        datasets: [{
+            label: 'Resources',
+            data: {{ ratings_vs_bookings_data | tojson }},
+            backgroundColor: chartColors.primary
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                title: { display: true, text: 'Average Rating' },
+                min: 0,
+                max: 5
+            },
+            y: {
+                title: { display: true, text: 'Total Bookings' },
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// 6. Bookings per User Role - Pie Chart
+const bookingsByRoleCtx = document.getElementById('bookingsByRoleChart').getContext('2d');
+// Map roles to specific colors: admin=red, staff=green, student=blue
+const roleLabels = {{ bookings_by_role_data.roles | tojson }};
+const roleColors = roleLabels.map(role => {
+    if (role === 'admin') return chartColors.danger; // red
+    if (role === 'staff') return chartColors.success; // green
+    if (role === 'student') return chartColors.primary; // blue
+    return chartColors.secondary; // default for other roles
+});
+new Chart(bookingsByRoleCtx, {
+    type: 'pie',
+    data: {
+        labels: roleLabels,
+        datasets: [{
+            data: {{ bookings_by_role_data.counts | tojson }},
+            backgroundColor: roleColors
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+// 7. Booking Status Distribution - Doughnut Chart
+const statusDistributionCtx = document.getElementById('statusDistributionChart').getContext('2d');
+new Chart(statusDistributionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ status_distribution_data.statuses | tojson }},
+        datasets: [{
+            data: {{ status_distribution_data.counts | tojson }},
+            backgroundColor: [chartColors.primary, chartColors.success, chartColors.warning, chartColors.danger, chartColors.secondary]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+// 8. Bookings by Department - Bar Chart
+const bookingsByDepartmentCtx = document.getElementById('bookingsByDepartmentChart');
+if (bookingsByDepartmentCtx) {
+    const deptData = {{ bookings_by_department_data | tojson }};
+    if (deptData.departments && deptData.departments.length > 0) {
+        new Chart(bookingsByDepartmentCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: deptData.departments,
+                datasets: [{
+                    label: 'Total Bookings',
+                    data: deptData.counts,
+                    backgroundColor: chartColors.info
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    } else {
+        bookingsByDepartmentCtx.parentElement.parentElement.innerHTML = '<div class="card-body"><p class="text-muted mb-0">No department data available. Users need to have department information set.</p></div>';
+    }
+}
+
+// 9. Resource Usage by Department - Bar Chart (grouped)
+const resourceUsageByDeptCtx = document.getElementById('resourceUsageByDeptChart');
+if (resourceUsageByDeptCtx) {
+    const usageData = {{ resource_usage_by_dept_data | tojson }};
+    if (usageData.departments && usageData.departments.length > 0) {
+        new Chart(resourceUsageByDeptCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: usageData.departments,
+                datasets: [
+                    {
+                        label: 'Bookings',
+                        data: usageData.booking_counts,
+                        backgroundColor: chartColors.primary
+                    },
+                    {
+                        label: 'Unique Resources',
+                        data: usageData.resource_counts,
+                        backgroundColor: chartColors.success
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    } else {
+        resourceUsageByDeptCtx.parentElement.parentElement.innerHTML = '<div class="card-body"><p class="text-muted mb-0">No department data available. Users need to have department information set.</p></div>';
+    }
+}
+
+// 10. Department Utilization Trends - Line Chart (multiple lines)
+const deptTrendsCtx = document.getElementById('deptTrendsChart');
+if (deptTrendsCtx) {
+    const trendsData = {{ dept_trends_data | tojson }};
+    if (trendsData.dates && trendsData.dates.length > 0 && trendsData.datasets && trendsData.datasets.length > 0) {
+        const colorPalette = [
+            chartColors.primary,
+            chartColors.success,
+            chartColors.warning,
+            chartColors.danger,
+            chartColors.info,
+            chartColors.secondary,
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)'
+        ];
+        
+        const datasets = trendsData.datasets.map((dataset, index) => ({
+            label: dataset.label || 'Unknown',
+            data: dataset.data,
+            borderColor: colorPalette[index % colorPalette.length],
+            backgroundColor: colorPalette[index % colorPalette.length].replace('0.8', '0.1'),
+            tension: 0.4,
+            fill: false
+        }));
+        
+        new Chart(deptTrendsCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: trendsData.dates,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    } else {
+        deptTrendsCtx.parentElement.parentElement.innerHTML = '<div class="card-body"><p class="text-muted mb-0">No department trend data available. Users need to have department information set.</p></div>';
+    }
+}
+
+// 11. Department vs. Role Cross-Analysis - Grouped Bar Chart
+const deptRoleCtx = document.getElementById('deptRoleChart');
+if (deptRoleCtx) {
+    const crossData = {{ dept_role_data | tojson }};
+    if (crossData.departments && crossData.departments.length > 0 && crossData.datasets && crossData.datasets.length > 0) {
+        const roleColorMap = {
+            'admin': chartColors.danger,
+            'staff': chartColors.success,
+            'student': chartColors.primary
+        };
+        
+        const datasets = crossData.datasets.map(dataset => ({
+            label: dataset.label.charAt(0).toUpperCase() + dataset.label.slice(1),
+            data: dataset.data,
+            backgroundColor: roleColorMap[dataset.label] || chartColors.secondary
+        }));
+        
+        new Chart(deptRoleCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: crossData.departments,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true },
+                    x: {
+                        stacked: false
+                    }
+                }
+            }
+        });
+    } else {
+        deptRoleCtx.parentElement.parentElement.innerHTML = '<div class="card-body"><p class="text-muted mb-0">No department/role data available. Users need to have department information set.</p></div>';
+    }
+}
+
+</script>
+{% endblock %}

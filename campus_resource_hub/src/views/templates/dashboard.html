@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Welcome back, {{ current_user.first_name if current_user.first_name else current_user.username }}</h1>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Bookings</h5>
+                    <p class="card-text display-4">{{ active_bookings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Bookings</h5>
+                    <p class="card-text display-4">{{ pending_bookings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('resources.search') }}" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Find Resources
+                        </a>
+                        <a href="{{ url_for('booking.list') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar"></i> View My Bookings
+                        </a>
+                        <a href="{{ url_for('message.inbox') }}" class="btn btn-outline-secondary">
+                            ✉️ View My Messages
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities and Upcoming Bookings -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Activities</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ activity.resource.title }}</h6>
+                                <small class="text-muted">{{ activity.created_at|datetime }}</small>
+                            </div>
+                            <p class="mb-1">Status: <span class="badge bg-{{ activity.status_color }}">{{ activity.status }}</span></p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No recent activities</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upcoming Bookings</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_bookings %}
+                    <div class="list-group list-group-flush">
+                        {% for booking in upcoming_bookings %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ booking.resource.title }}</h6>
+                                <small class="text-muted">{{ booking.start_date|date }}</small>
+                            </div>
+                            <p class="mb-1">{{ booking.start_time_display }} - {{ booking.end_time_display }}</p>
+                            <div class="mt-2">
+                                <a href="{{ url_for('booking.details', id=booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No upcoming bookings</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+{% endblock %}

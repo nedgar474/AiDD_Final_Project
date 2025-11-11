@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="py-5 text-center">
+        <h1 class="display-4">Welcome to Campus Resource Hub</h1>
+        <p class="lead">Discover and book campus resources efficiently</p>
+        
+        <!-- Search Bar -->
+        <div class="row justify-content-center mt-4 mb-3">
+            <div class="col-md-8 col-lg-6">
+                <form method="GET" action="{{ url_for('resources.search') }}" class="d-flex">
+                    <input type="text" name="q" class="form-control form-control-lg" placeholder="Search for resources..." aria-label="Search resources">
+                    <button type="submit" class="btn btn-primary btn-lg ms-2">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Get Started</a>
+        {% endif %}
+    </div>
+
+    <!-- Featured Resources Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Featured Resources</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for resource in featured_resources %}
+            <div class="col">
+                <div class="card h-100 resource-card">
+                    {% if resource.image_url %}
+                    <img src="{{ resource.image_url }}" class="card-img-top" alt="{{ resource.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ resource.title }}</h5>
+                        <p class="card-text">{{ resource.description|truncate(100) }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary">{{ resource.category }}</span>
+                            <a href="{{ url_for('resources.view', id=resource.id) }}" class="btn btn-outline-primary">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Browse by Category</h2>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for category in categories %}
+            <div class="col">
+                <a href="{{ url_for('resources.by_category', category=category.category) }}" class="text-decoration-none">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ category.category }}</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="mb-5">
+        <h2 class="text-center mb-4">How It Works</h2>
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-search fa-3x text-primary"></i>
+                </div>
+                <h3>Browse Resources</h3>
+                <p>Explore our wide range of campus resources available for booking</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-calendar-check fa-3x text-primary"></i>
+                </div>
+                <h3>Book Online</h3>
+                <p>Reserve your resources quickly and easily through our platform</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <i class="fas fa-clock fa-3x text-primary"></i>
+                </div>
+                <h3>Manage Bookings</h3>
+                <p>Track and manage your bookings through your personal dashboard</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category }} Resources - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.search') }}">Resources</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ category }}</li>
+        </ol>
+    </nav>
+
+    <h1 class="mb-4">{{ category }} Resources</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for resource in resources %}
+        <div class="col">
+            <div class="card h-100 resource-card">
+                {% if resource.image_url %}
+                <img src="{{ resource.image_url }}" class="card-img-top" alt="{{ resource.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ resource.title }}</h5>
+                    <p class="card-text">{{ resource.description|truncate(100) }}</p>
+                    <div class="mb-2">
+                        {% if resource.is_available %}
+                        <span class="badge bg-success">Available</span>
+                        {% else %}
+                        <span class="badge bg-danger">Unavailable</span>
+                        {% endif %}
+                        {% set review_count = resource.review_count() %}
+                        {% if review_count > 0 %}
+                        {% set rating_percentage = resource.rating_percentage() %}
+                        <span class="badge bg-info">{{ rating_percentage }}% Rating ({{ review_count }} review{{ 's' if review_count != 1 else '' }})</span>
+                        {% if resource.id in top_rated_ids %}
+                        <span class="badge bg-warning text-dark"><i class="fas fa-star"></i> Top Rated</span>
+                        {% endif %}
+                        {# Lowest rated badge hidden - functionality kept for future use #}
+                        {# {% if resource.id == lowest_rated_id %}
+                        <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Lowest Rated</span>
+                        {% endif %} #}
+                        {% else %}
+                        <span class="badge bg-secondary">No reviews yet</span>
+                        {% endif %}
+                    </div>
+                    {% if resource.location %}
+                    <p class="card-text"><small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ resource.location }}</small></p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('resources.view', id=resource.id) }}" class="btn btn-outline-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No resources found in this category.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+# Database Migrations
+
+This directory contains Flask-Migrate (Alembic) database migration scripts for the Campus Resource Hub application.
+
+## Overview
+
+Flask-Migrate is a Flask extension that handles SQLAlchemy database migrations using Alembic. Migrations allow you to version control your database schema changes and apply them consistently across different environments.
+
+## Migration Workflow
+
+### Initial Setup (First Time Only)
+
+If migrations haven't been initialized yet:
+
+```bash
+flask db init
+```
+
+This creates the `migrations/` directory structure. **Note**: This directory already exists, so you typically won't need to run this.
+
+### Creating a Migration
+
+When you modify database models (in `src/models/`), create a migration:
+
+```bash
+flask db migrate -m "Description of changes"
+```
+
+This will:
+1. Compare current models to the database state
+2. Generate a migration script in `migrations/versions/`
+3. Include the description you provided
+
+**Example**:
+```bash
+flask db migrate -m "Add department field to users table"
+```
+
+### Reviewing Migrations
+
+Before applying, review the generated migration file in `migrations/versions/` to ensure it's correct.
+
+### Applying Migrations
+
+To apply pending migrations to the database:
+
+```bash
+flask db upgrade
+```
+
+This applies all migrations that haven't been applied yet.
+
+**Apply to specific revision**:
+```bash
+flask db upgrade <revision>
+```
+
+### Rolling Back Migrations
+
+To roll back the last migration:
+
+```bash
+flask db downgrade
+```
+
+**Roll back to specific revision**:
+```bash
+flask db downgrade <revision>
+```
+
+### Checking Migration Status
+
+To see current database revision and pending migrations:
+
+```bash
+flask db current
+flask db history
+```
+
+## Common Migration Scenarios
+
+### Adding a New Column
+
+1. Add column to model in `src/models/`
+2. Create migration: `flask db migrate -m "Add column_name to table_name"`
+3. Review generated migration
+4. Apply: `flask db upgrade`
+
+### Removing a Column
+
+1. Remove column from model
+2. Create migration: `flask db migrate -m "Remove column_name from table_name"`
+3. Review migration (ensure data migration if needed)
+4. Apply: `flask db upgrade`
+
+### Creating a New Table
+
+1. Create new model class in `src/models/`
+2. Import model in `src/models/__init__.py`
+3. Create migration: `flask db migrate -m "Create table_name table"`
+4. Apply: `flask db upgrade`
+
+### Modifying a Column Type
+
+1. Modify column type in model
+2. Create migration: `flask db migrate -m "Change column_name type"`
+3. Review migration (may need data migration for existing data)
+4. Apply: `flask db upgrade`
+
+## Migration Files
+
+### Structure
+
+```
+migrations/
+├── versions/              # Migration version files
+│   ├── 1322db27dc1d_*.py
+│   └── e8db8c5ff61e_*.py
+├── alembic.ini           # Alembic configuration
+├── env.py               # Migration environment setup
+├── script.py.mako       # Migration script template
+└── README               # This file
+```
+
+### Migration File Format
+
+Each migration file in `versions/` contains:
+- **Revision ID**: Unique identifier for the migration
+- **Down Revision**: Previous migration (forms a chain)
+- **Message**: Description of changes
+- **Upgrade Function**: Changes to apply
+- **Downgrade Function**: Changes to reverse
+
+## Important Notes
+
+### Development vs Production
+
+- **Development**: Migrations are optional. You can use `db.create_all()` for quick setup.
+- **Production**: Always use migrations for schema changes to maintain data integrity.
+
+### Data Migrations
+
+For complex changes (e.g., data transformations), you may need to write custom migration code:
+
+```python
+def upgrade():
+    # Schema changes
+    op.add_column('users', sa.Column('new_field', sa.String(50)))
+    
+    # Data migration
+    connection = op.get_bind()
+    connection.execute("UPDATE users SET new_field = 'default' WHERE new_field IS NULL")
+
+def downgrade():
+    op.drop_column('users', 'new_field')
+```
+
+### Backup Before Migrations
+
+**Always backup your database before running migrations in production!**
+
+```bash
+# SQLite
+cp instance/campus_resource_hub.db instance/campus_resource_hub.db.backup
+
+# PostgreSQL
+pg_dump database_name > backup.sql
+```
+
+## Troubleshooting
+
+### Migration Conflicts
+
+**Issue**: Migration conflicts or errors
+- **Solution**: Review migration files, check for manual database changes, resolve conflicts manually
+
+### Database Out of Sync
+
+**Issue**: Database doesn't match models
+- **Solution**: 
+  1. Check current revision: `flask db current`
+  2. Review migration history: `flask db history`
+  3. Apply pending migrations: `flask db upgrade`
+
+### Manual Database Changes
+
+If you've made manual database changes outside of migrations:
+1. Create a migration to reflect current state: `flask db migrate -m "Sync with manual changes"`
+2. Review carefully before applying
+
+## Best Practices
+
+1. **Always review migrations** before applying
+2. **Test migrations** on a copy of production data first
+3. **Commit migration files** to version control
+4. **Use descriptive messages** for migrations
+5. **One logical change per migration** when possible
+6. **Backup before migrating** in production
+7. **Test downgrade path** to ensure reversibility
+
+## Current Migration Status
+
+The application includes the following migrations:
+- Initial schema setup
+- Message flagging and user suspension
+- Additional fields for various features
+
+To see all migrations:
+```bash
+flask db history
+```
+
+To see current database revision:
+```bash
+flask db current
+```
+
+## Additional Resources
+
+- [Flask-Migrate Documentation](https://flask-migrate.readthedocs.io/)
+- [Alembic Documentation](https://alembic.sqlalchemy.org/)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)

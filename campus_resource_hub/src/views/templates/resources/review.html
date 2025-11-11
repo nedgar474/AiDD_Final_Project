@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{% if existing_review %}Edit Review{% else %}Leave Review{% endif %} - {{ resource.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.search') }}">Resources</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.view', id=resource.id) }}">{{ resource.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if existing_review %}Edit Review{% else %}Leave Review{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if existing_review %}Edit Your Review{% else %}Leave a Review{% endif %}</h4>
+                    <small class="text-muted">{{ resource.title }}</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.rating.label(class="form-label") }}
+                            {{ form.rating(class="form-select") }}
+                            {% if form.rating.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.rating.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Rate this resource from 1 to 5 stars</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.review_text.label(class="form-label") }}
+                            {{ form.review_text(class="form-control", rows=5) }}
+                            {% if form.review_text.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.review_text.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Share your experience with this resource (optional, max 1000 characters)</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('resources.view', id=resource.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                            {% if existing_review %}
+                            <form method="POST" action="{{ url_for('resources.delete_review', id=resource.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete your review? This action cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-outline-danger">Delete Review</button>
+                            </form>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

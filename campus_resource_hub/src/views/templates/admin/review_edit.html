@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Edit Review{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Edit Review</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.rating.label(class="form-label") }}
+                    {{ form.rating(class="form-select") }}
+                    {% if form.rating.errors %}
+                        <div class="text-danger">
+                            {% for error in form.rating.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.review_text.label(class="form-label") }}
+                    {{ form.review_text(class="form-control", rows=5) }}
+                    {% if form.review_text.errors %}
+                        <div class="text-danger">
+                            {% for error in form.review_text.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('admin.reviews') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

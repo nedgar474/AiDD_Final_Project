@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.search') }}">Resources</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('resources.view', id=resource.id) }}">{{ resource.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Book Resource</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title mb-0">Book {{ resource.title }}</h2>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Calendar View -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Select Date & Time</h5>
+                            <div id="calendar" style="min-height: 400px;"></div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <span class="badge bg-success me-2">Active</span> Active bookings
+                                    <span class="badge bg-warning ms-3 me-2">Pending</span> Pending bookings
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Date/Time Inputs (hidden but required for form submission) -->
+                        <div class="mb-3" style="display: none;">
+                            {{ form.start_date.label(class="form-label") }}
+                            {{ form.start_date(id="start_date", class="form-control" + (" is-invalid" if form.start_date.errors else "")) }}
+                            {% if form.start_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.start_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3" style="display: none;">
+                            {{ form.end_date.label(class="form-label") }}
+                            {{ form.end_date(id="end_date", class="form-control" + (" is-invalid" if form.end_date.errors else "")) }}
+                            {% if form.end_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Selected Time Display -->
+                        <div class="alert alert-info mb-3" id="selected-time-display" style="display: none;">
+                            <strong>Selected Time:</strong>
+                            <span id="selected-start-time"></span> to <span id="selected-end-time"></span>
+                            <br><small class="text-muted">Click once to set start time, twice to set end time, three times to clear.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes() }}
+                            <div class="form-text">Add any special requirements or notes for your booking.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.recurrence_type.label(class="form-label") }}
+                            {{ form.recurrence_type(id="recurrence_type", class="form-select") }}
+                            <div class="form-text">Select how often you want to repeat this booking.</div>
+                        </div>
+
+                        <div class="mb-3" id="recurrence_end_date_group" style="display: none;">
+                            {{ form.recurrence_end_date.label(class="form-label") }}
+                            {{ form.recurrence_end_date(id="recurrence_end_date", class="form-control" + (" is-invalid" if form.recurrence_end_date.errors else "")) }}
+                            {% if form.recurrence_end_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.recurrence_end_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">The booking will repeat until this date.</div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Resource Details</h5>
+                                <ul class="list-unstyled mb-0">
+                                    {% if resource.location %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-map-marker-alt text-primary"></i>
+                                        Location: {{ resource.location }}
+                                    </li>
+                                    {% endif %}
+                                    {% if resource.capacity %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-users text-primary"></i>
+                                        Capacity: {{ resource.capacity }} people
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {% if show_waitlist %}
+                        <div class="alert alert-warning mb-3">
+                            <strong>Resource Unavailable</strong><br>
+                            {% if conflict_reason == 'time' %}
+                            This resource is already booked during the requested time period.
+                            {% else %}
+                            This resource has reached its capacity for the requested time period.
+                            {% endif %}
+                            <br>
+                            <a href="{{ url_for('resources.join_waitlist', id=resource.id) }}" class="btn btn-warning btn-sm mt-2">
+                                Join Waitlist Instead
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Submit Booking Request</button>
+                            <a href="{{ url_for('resources.view', id=resource.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<style>
+    .fc-event {
+        cursor: pointer;
+    }
+    .fc-daygrid-day.fc-day-today {
+        background-color: #e7f3ff;
+    }
+    #calendar {
+        background-color: white;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resourceId = {{ resource.id }};
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const selectedTimeDisplay = document.getElementById('selected-time-display');
+    const selectedStartTime = document.getElementById('selected-start-time');
+    const selectedEndTime = document.getElementById('selected-end-time');
+    const recurrenceEndDate = document.getElementById('recurrence_end_date');
+    let selectedStart = null;
+    let selectedEnd = null;
+    let selectionState = 'none'; // 'none', 'start', 'end'
+    let startEvent = null;
+    let endEvent = null;
+    
+    // Initialize FullCalendar
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: function(fetchInfo, successCallback, failureCallback) {
+            fetch(`{{ url_for('resources.bookings_json', id=resource.id) }}`)
+                .then(response => response.json())
+                .then(data => {
+                    successCallback(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching bookings:', error);
+                    failureCallback(error);
+                });
+        },
+        selectable: false, // Disable drag selection
+        slotDuration: '00:30:00', // 30-minute time slots
+        dateClick: function(info) {
+            const clickedDate = new Date(info.date);
+            const now = new Date();
+            
+            // Don't allow selection of past times
+            if (clickedDate < now) {
+                alert('Cannot select past times. Please select a future time.');
+                return;
+            }
+            
+            if (selectionState === 'none') {
+                // First click: Set start time
+                selectedStart = clickedDate;
+                selectionState = 'start';
+                
+                // Add custom event to highlight start time
+                if (startEvent) {
+                    calendar.getEventById('temp-start')?.remove();
+                }
+                startEvent = calendar.addEvent({
+                    id: 'temp-start',
+                    start: selectedStart,
+                    end: new Date(selectedStart.getTime() + 30 * 60 * 1000), // 30 min slot
+                    display: 'block',
+                    backgroundColor: '#28a745',
+                    borderColor: '#28a745',
+                    title: 'Start Time',
+                    classNames: ['temp-selection-start']
+                });
+                
+                // Update form inputs
+                const startStr = formatDateTimeLocal(selectedStart);
+                startDateInput.value = startStr;
+                
+                // Show partial selection
+                selectedStartTime.textContent = formatDisplayTime(selectedStart);
+                selectedEndTime.textContent = '...';
+                selectedTimeDisplay.style.display = 'block';
+                
+            } else if (selectionState === 'start') {
+                // Second click: Set end time
+                if (clickedDate <= selectedStart) {
+                    alert('End time must be after start time. Please select a later time.');
+                    return;
+                }
+                
+                selectedEnd = clickedDate;
+                selectionState = 'end';
+                
+                // Remove old end event if exists
+                calendar.getEventById('temp-end')?.remove();
+                
+                // Add custom event to highlight end time
+                endEvent = calendar.addEvent({
+                    id: 'temp-end',
+                    start: selectedEnd,
+                    end: new Date(selectedEnd.getTime() + 30 * 60 * 1000), // 30 min slot
+                    display: 'block',
+                    backgroundColor: '#dc3545',
+                    borderColor: '#dc3545',
+                    title: 'End Time',
+                    classNames: ['temp-selection-end']
+                });
+                
+                // Highlight the range between start and end
+                highlightTimeRange(selectedStart, selectedEnd);
+                
+                // Update form inputs
+                const startStr = formatDateTimeLocal(selectedStart);
+                const endStr = formatDateTimeLocal(selectedEnd);
+                startDateInput.value = startStr;
+                endDateInput.value = endStr;
+                
+                // Update display
+                selectedStartTime.textContent = formatDisplayTime(selectedStart);
+                selectedEndTime.textContent = formatDisplayTime(selectedEnd);
+                
+                // Update recurrence end date min if needed
+                if (recurrenceEndDate) {
+                    recurrenceEndDate.min = endStr;
+                }
+                
+            } else if (selectionState === 'end') {
+                // Third click: Clear selection
+                clearSelection();
+            }
+        },
+        eventClick: function(info) {
+            // Prevent dateClick from firing when clicking on events
+            info.jsEvent.stopPropagation();
+            
+            // Don't show details for temporary selection events
+            if (info.event.id && info.event.id.startsWith('temp-')) {
+                return;
+            }
+            
+            // Show booking details on click
+            const event = info.event;
+            const user = event.extendedProps.user;
+            const status = event.extendedProps.status;
+            const notes = event.extendedProps.notes || 'No notes';
+            
+            alert(`Booking Details:\n\nUser: ${user}\nStatus: ${status}\nNotes: ${notes}`);
+        },
+        eventColor: '#3788d8',
+        height: 'auto',
+        slotMinTime: '00:00:00',
+        slotMaxTime: '24:00:00',
+        allDaySlot: false,
+        nowIndicator: true,
+        businessHours: {
+            daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
+            startTime: '08:00',
+            endTime: '18:00'
+        }
+    });
+    
+    calendar.render();
+    
+    // Function to highlight time range between start and end
+    function highlightTimeRange(start, end) {
+        // Remove any existing range highlight events
+        calendar.getEvents().forEach(event => {
+            if (event.id && event.id.startsWith('temp-range-')) {
+                event.remove();
+            }
+        });
+        
+        // Create events for each 30-minute slot in the range
+        let current = new Date(start);
+        let slotIndex = 0;
+        
+        while (current < end) {
+            const slotEnd = new Date(Math.min(current.getTime() + 30 * 60 * 1000, end.getTime()));
+            
+            calendar.addEvent({
+                id: `temp-range-${slotIndex}`,
+                start: current,
+                end: slotEnd,
+                display: 'block',
+                backgroundColor: '#ffc107',
+                borderColor: '#ffc107',
+                title: '',
+                classNames: ['temp-selection-range']
+            });
+            
+            current = new Date(slotEnd);
+            slotIndex++;
+        }
+    }
+    
+    // Function to clear selection
+    function clearSelection() {
+        // Remove all temporary selection events
+        calendar.getEvents().forEach(event => {
+            if (event.id && (event.id.startsWith('temp-') || event.classNames.includes('temp-selection-start') || event.classNames.includes('temp-selection-end') || event.classNames.includes('temp-selection-range'))) {
+                event.remove();
+            }
+        });
+        
+        selectedStart = null;
+        selectedEnd = null;
+        selectionState = 'none';
+        startEvent = null;
+        endEvent = null;
+        
+        // Clear form inputs
+        startDateInput.value = '';
+        endDateInput.value = '';
+        
+        // Hide display
+        selectedTimeDisplay.style.display = 'none';
+        
+        if (recurrenceEndDate) {
+            recurrenceEndDate.min = '';
+        }
+    }
+    
+    // Helper function to format date for datetime-local input
+    function formatDateTimeLocal(date) {
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+            console.error('Invalid date:', date);
+            return '';
+        }
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Helper function to format time for display
+    function formatDisplayTime(date) {
+        return date.toLocaleString('en-US', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+    
+    // Set minimum date to today for hidden inputs
+    const today = new Date().toISOString().slice(0, 16);
+    startDateInput.min = today;
+    endDateInput.min = today;
+    if (recurrenceEndDate) {
+        recurrenceEndDate.min = today;
+    }
+
+    // Show/hide recurrence end date based on recurrence type
+    const recurrenceType = document.getElementById('recurrence_type');
+    const recurrenceEndDateGroup = document.getElementById('recurrence_end_date_group');
+    
+    function toggleRecurrenceEndDate() {
+        if (recurrenceType.value && recurrenceType.value !== '') {
+            recurrenceEndDateGroup.style.display = 'block';
+            // Set min date to end_date value
+            if (endDateInput.value && recurrenceEndDate) {
+                recurrenceEndDate.min = endDateInput.value;
+            }
+        } else {
+            recurrenceEndDateGroup.style.display = 'none';
+            if (recurrenceEndDate) {
+                recurrenceEndDate.value = '';
+            }
+        }
+    }
+    
+    if (recurrenceType) {
+        recurrenceType.addEventListener('change', toggleRecurrenceEndDate);
+        // Initial state
+        toggleRecurrenceEndDate();
+    }
+    
+    // Update recurrence_end_date min when end_date changes
+    endDateInput.addEventListener('change', function() {
+        if (recurrenceEndDate && recurrenceType.value && recurrenceType.value !== '') {
+            recurrenceEndDate.min = this.value;
+        }
+    });
+    
+    // Form validation - ensure dates are selected
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!startDateInput.value || !endDateInput.value) {
+            e.preventDefault();
+            alert('Please select a date and time range from the calendar.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

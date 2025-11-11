@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Messages{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Message Management</h1>
+
+    <!-- Flagged Messages Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Flagged Messages ({{ flagged_messages|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if flagged_messages %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Subject</th>
+                            <th>Flag Reason</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in flagged_messages %}
+                        <tr class="table-warning">
+                            <td>{{ message.id }}</td>
+                            <td>{{ message.sender.username }}</td>
+                            <td>{{ message.recipient.username }}</td>
+                            <td>{{ message.subject }}</td>
+                            <td><small>{{ message.flag_reason or 'No reason provided' }}</small></td>
+                            <td>{{ message.created_at|datetime }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.view_message', id=message.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{{ url_for('admin.edit_message', id=message.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                <form method="POST" action="{{ url_for('admin.hide_message', id=message.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Hide</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.unflag_message', id=message.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-info">Unflag</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.delete_message', id=message.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this message?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No flagged messages.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- All Messages Section -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Messages</h5>
+        </div>
+        <div class="card-body">
+            {% if all_messages %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in all_messages %}
+                        <tr>
+                            <td>{{ message.id }}</td>
+                            <td>{{ message.sender.username }}</td>
+                            <td>{{ message.recipient.username }}</td>
+                            <td>{{ message.subject }}</td>
+                            <td>
+                                {% if message.is_flagged %}
+                                <span class="badge bg-warning">Flagged</span>
+                                {% endif %}
+                                {% if message.is_hidden %}
+                                <span class="badge bg-secondary">Hidden</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ message.created_at|datetime }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.view_message', id=message.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{{ url_for('admin.edit_message', id=message.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                {% if not message.is_hidden %}
+                                <form method="POST" action="{{ url_for('admin.hide_message', id=message.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Hide</button>
+                                </form>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('admin.delete_message', id=message.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this message?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No messages found.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}
+

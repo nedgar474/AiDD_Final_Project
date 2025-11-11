@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Messages</h1>
+        <div class="btn-group" role="group" aria-label="Messages navigation">
+            <a href="{{ url_for('message.inbox') }}" class="btn btn-primary">Inbox</a>
+            <a href="{{ url_for('message.sent') }}" class="btn btn-outline-primary">Sent</a>
+            <a href="{{ url_for('message.compose') }}" class="btn btn-outline-secondary">Compose</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Inbox</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ url_for('message.inbox') }}" class="btn btn-primary">Inbox</a>
+                        <a href="{{ url_for('message.sent') }}" class="btn btn-outline-primary">Sent</a>
+                        <a href="{{ url_for('message.compose') }}" class="btn btn-outline-secondary">Compose</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="list-group">
+                        {% for message in messages %}
+                        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" href="{{ url_for('message.view', id=message.id) }}">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">{{ message.subject }}</div>
+                                From: {{ message.sender.username }}
+                            </div>
+                            <small class="text-muted">{{ message.created_at|datetime }}</small>
+                            {% if not message.is_read %}
+                            <span class="badge bg-primary rounded-pill ms-2">New</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No messages in your inbox.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campus Resource Hub{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Campus Resource Hub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" title="Notifications" href="{{ url_for('notification.list') }}" id="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" title="Messages" href="{{ url_for('message.inbox') }}">✉️</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile.view_profile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex">
+        {% if current_user.is_authenticated %}
+        <!-- Fixed Sidebar -->
+        <nav class="sidebar bg-light border-end" style="width: 250px; min-height: calc(100vh - 56px); position: fixed; top: 56px; left: 0; overflow-y: auto; z-index: 1000;">
+            <div class="p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('main.index') }}">
+                            <i class="fas fa-home me-2"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('main.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('resources.search') }}">
+                            <i class="fas fa-search me-2"></i> Resources
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('booking.calendar') }}">
+                            <i class="fas fa-calendar me-2"></i> Calendar
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('message.inbox') }}">
+                            <i class="fas fa-envelope me-2"></i> Messages
+                        </a>
+                    </li>
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item mb-2">
+                        <a class="nav-link text-dark" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-cog me-2"></i> Administrative Dashboard
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="flex-grow-1" style="{% if current_user.is_authenticated %}margin-left: 250px;{% endif %}">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© 2024 Campus Resource Hub. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if current_user.is_authenticated %}
+    <script>
+    // Load unread notification count
+    fetch('{{ url_for("notification.unread_count") }}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (badge && data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'block';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error loading notification count:', error));
+    </script>
+    {% endif %}
+    {% block scripts %}{% endblock %}
+    
+    <!-- Resource Concierge Chatbot -->
+    {% if current_user.is_authenticated %}
+    <!-- Check if concierge is available before showing -->
+    <div id="concierge-chatbot" class="position-fixed bottom-0 end-0 m-3" style="z-index: 1050; display: none;">
+        <div class="card shadow-lg" style="width: 400px; max-height: 600px; display: flex; flex-direction: column;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>Resource Concierge
+                </h6>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" id="concierge-minimize" title="Minimize">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light" id="concierge-close" title="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                <div id="concierge-chat-history" class="p-3" style="flex: 1; overflow-y: auto; min-height: 300px;">
+                    <div class="alert alert-info mb-0">
+                        <small><i class="fas fa-info-circle me-2"></i>Ask me about resources, availability, or help with booking!</small>
+                    </div>
+                </div>
+                <div class="border-top p-2">
+                    <form id="concierge-form">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="concierge-input" 
+                                   placeholder="Ask a question..." autocomplete="off">
+                            <button type="submit" class="btn btn-primary" id="concierge-send">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Concierge Toggle Button (Lower Right Corner) -->
+    <button id="concierge-toggle" class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-3" 
+            style="width: 60px; height: 60px; z-index: 1049; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none;"
+            title="Open Resource Concierge">
+        <i class="fas fa-robot fa-lg"></i>
+    </button>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if concierge is available
+        fetch('{{ url_for("concierge.health") }}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Health check failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.available) {
+                    // Show toggle button if concierge is available
+                    const toggleBtn = document.getElementById('concierge-toggle');
+                    if (toggleBtn) {
+                        toggleBtn.style.display = 'block';
+                    }
+                } else {
+                    // Hide concierge UI if not available, but don't hide if already open
+                    const toggleBtn = document.getElementById('concierge-toggle');
+                    const chatbot = document.getElementById('concierge-chatbot');
+                    if (toggleBtn && chatbot.style.display === 'none') {
+                        toggleBtn.style.display = 'none';
+                    }
+                    // Only hide chatbot if it's not currently open
+                    if (chatbot && chatbot.style.display === 'none') {
+                        chatbot.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                // Log error but don't hide chatbot if it's already open
+                console.warn('Concierge health check failed:', error);
+                const toggleBtn = document.getElementById('concierge-toggle');
+                const chatbot = document.getElementById('concierge-chatbot');
+                // Only hide if chatbot is not currently visible
+                if (toggleBtn && chatbot && chatbot.style.display === 'none') {
+                    toggleBtn.style.display = 'none';
+                }
+            });
+        
+        const chatbot = document.getElementById('concierge-chatbot');
+        const toggleBtn = document.getElementById('concierge-toggle');
+        const minimizeBtn = document.getElementById('concierge-minimize');
+        const closeBtn = document.getElementById('concierge-close');
+        const chatHistory = document.getElementById('concierge-chat-history');
+        const conciergeForm = document.getElementById('concierge-form');
+        const conciergeInput = document.getElementById('concierge-input');
+        const sendBtn = document.getElementById('concierge-send');
+        
+        let isMinimized = false;
+        
+        // Toggle chatbot
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                if (chatbot.style.display === 'none' || isMinimized) {
+                    chatbot.style.display = 'flex';
+                    isMinimized = false;
+                    toggleBtn.style.display = 'none';
+                    conciergeInput.focus();
+                }
+            });
+        }
+        
+        // Minimize chatbot
+        if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', function() {
+                chatbot.style.display = 'none';
+                isMinimized = true;
+                toggleBtn.style.display = 'block';
+            });
+        }
+        
+        // Close chatbot
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                chatbot.style.display = 'none';
+                isMinimized = false;
+                toggleBtn.style.display = 'block';
+            });
+        }
+        
+        // Add message to chat history
+        function addMessage(text, isUser = true, links = [], bookingProposal = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `mb-3 ${isUser ? 'text-end' : 'text-start'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `d-inline-block p-2 rounded ${isUser ? 'bg-primary text-white' : 'bg-light border'}`;
+            bubble.style.maxWidth = '80%';
+            bubble.style.wordWrap = 'break-word';
+            
+            // Add message text (with HTML support for links)
+            bubble.innerHTML = text;
+            
+            // Add links if present
+            if (links && links.length > 0) {
+                const linksDiv = document.createElement('div');
+                linksDiv.className = 'mt-2';
+                links.forEach(link => {
+                    const linkEl = document.createElement('a');
+                    linkEl.href = link.url;
+                    linkEl.className = 'btn btn-sm btn-outline-primary me-1';
+                    linkEl.textContent = link.text;
+                    linkEl.target = '_blank';
+                    linksDiv.appendChild(linkEl);
+                });
+                bubble.appendChild(linksDiv);
+            }
+            
+            // Add booking proposal if present
+            if (bookingProposal) {
+                const proposalDiv = document.createElement('div');
+                proposalDiv.className = 'mt-3 p-2 bg-info bg-opacity-10 rounded border';
+                proposalDiv.innerHTML = `
+                    <strong>Booking Proposal:</strong><br>
+                    ${bookingProposal.resource_title}<br>
+                    <small>${bookingProposal.proposed_date} at ${bookingProposal.proposed_time} for ${bookingProposal.proposed_duration} hour(s)</small>
+                    <div class="mt-2">
+                        <a href="/resources/${bookingProposal.resource_id}/book" class="btn btn-sm btn-success me-1">
+                            <i class="fas fa-calendar-check me-1"></i>Book Now
+                        </a>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="this.parentElement.parentElement.remove()">
+                            Decline
+                        </button>
+                    </div>
+                `;
+                bubble.appendChild(proposalDiv);
+            }
+            
+            messageDiv.appendChild(bubble);
+            chatHistory.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        // Handle form submission
+        if (conciergeForm) {
+            conciergeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const query = conciergeInput.value.trim();
+                if (!query) return;
+                
+                // Add user message
+                addMessage(query, isUser=true);
+                conciergeInput.value = '';
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                
+                // Show loading message
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'mb-3 text-start';
+                loadingDiv.id = 'concierge-loading';
+                loadingDiv.innerHTML = '<div class="d-inline-block p-2 bg-light border rounded"><span class="spinner-border spinner-border-sm me-2"></span>Thinking...</div>';
+                chatHistory.appendChild(loadingDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+                
+                // Send query to backend
+                fetch('{{ url_for("concierge.query") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove loading message
+                    const loading = document.getElementById('concierge-loading');
+                    if (loading) loading.remove();
+                    
+                    if (data.success) {
+                        // Add AI response
+                        addMessage(
+                            data.response, 
+                            isUser=false, 
+                            links=data.links || [],
+                            bookingProposal=data.booking_proposal
+                        );
+                    } else {
+                        addMessage('Sorry, I encountered an error. Please try again.', isUser=false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Concierge error:', error);
+                    const loading = document.getElementById('concierge-loading');
+                    if (loading) loading.remove();
+                    // Don't hide chatbot on error, just show error message
+                    let errorMsg = 'Sorry, I\'m having trouble connecting. Please try again later.';
+                    if (error.message) {
+                        errorMsg += ` (${error.message})`;
+                    }
+                    addMessage(errorMsg, isUser=false);
+                    // Ensure chatbot stays visible
+                    const chatbot = document.getElementById('concierge-chatbot');
+                    if (chatbot) {
+                        chatbot.style.display = 'flex';
+                    }
+                })
+                .finally(() => {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    conciergeInput.focus();
+                });
+            });
+        }
+        
+        // Handle Enter key in input
+        if (conciergeInput) {
+            conciergeInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    conciergeForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        }
+    });
+    </script>
+    {% endif %}
+</body>
+</html>

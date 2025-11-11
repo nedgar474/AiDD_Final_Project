@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Search Resources{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Search Resources</h1>
+        {% if current_user.is_authenticated and (current_user.role == 'staff' or current_user.role == 'admin') %}
+        <a href="{{ url_for('resources.create') }}" class="btn btn-primary">Create Resource</a>
+        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <form method="GET" class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Search & Filter Resources</h5>
+                
+                <!-- Basic Search -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="q" class="form-label">Keyword</label>
+                        <input type="text" name="q" id="q" class="form-control" placeholder="Search by title or description" value="{{ query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select name="category" id="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.category }}" {% if cat.category == selected_category %}selected{% endif %}>
+                                {{ cat.category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" name="location" id="location" class="form-control" placeholder="Filter by location" value="{{ location }}">
+                    </div>
+                </div>
+                
+                <!-- Advanced Filters -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label for="min_capacity" class="form-label">Minimum Capacity</label>
+                        <input type="number" name="min_capacity" id="min_capacity" class="form-control" placeholder="Min capacity" value="{{ min_capacity }}" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="availability_start" class="form-label">Available From</label>
+                        <input type="datetime-local" name="availability_start" id="availability_start" class="form-control" value="{{ availability_start }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="availability_end" class="form-label">Available Until</label>
+                        <input type="datetime-local" name="availability_end" id="availability_end" class="form-control" value="{{ availability_end }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label">Sort By</label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                            <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Most Recent</option>
+                            <option value="most_booked" {% if sort_by == 'most_booked' %}selected{% endif %}>Most Booked</option>
+                            <option value="top_rated" {% if sort_by == 'top_rated' %}selected{% endif %}>Top Rated</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <a href="{{ url_for('resources.search') }}" class="btn btn-outline-secondary">Clear Filters</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Results -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for resource in resources %}
+        <div class="col">
+            <div class="card h-100 resource-card">
+                {% if resource.image_url %}
+                <img src="{{ resource.image_url }}" class="card-img-top" alt="{{ resource.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ resource.title }}</h5>
+                    <p class="card-text">{{ resource.description|truncate(100) }}</p>
+                    <div class="mb-2">
+                        <span class="badge bg-primary">{{ resource.category }}</span>
+                        {% if resource.is_available %}
+                        <span class="badge bg-success">Available</span>
+                        {% else %}
+                        <span class="badge bg-danger">Unavailable</span>
+                        {% endif %}
+                        {% set review_count = resource.review_count() %}
+                        {% if review_count > 0 %}
+                        {% set rating_percentage = resource.rating_percentage() %}
+                        <span class="badge bg-info">{{ rating_percentage }}% Rating ({{ review_count }} review{{ 's' if review_count != 1 else '' }})</span>
+                        {% if resource.id in top_rated_ids %}
+                        <span class="badge bg-warning text-dark"><i class="fas fa-star"></i> Top Rated</span>
+                        {% endif %}
+                        {# Lowest rated badge hidden - functionality kept for future use #}
+                        {# {% if resource.id == lowest_rated_id %}
+                        <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Lowest Rated</span>
+                        {% endif %} #}
+                        {% else %}
+                        <span class="badge bg-secondary">No reviews yet</span>
+                        {% endif %}
+                    </div>
+                    {% if resource.location %}
+                    <p class="card-text"><small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ resource.location }}</small></p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{{ url_for('resources.view', id=resource.id) }}" class="btn btn-outline-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No resources found matching your criteria.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

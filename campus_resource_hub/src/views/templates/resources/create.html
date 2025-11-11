@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Create Resource - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Create New Resource</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control") }}
+                    {% if form.title.errors %}
+                        <div class="text-danger">
+                            {% for error in form.title.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows=4) }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-control") }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">
+                                {% for error in form.category.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.location.label(class="form-label") }}
+                        {{ form.location(class="form-control") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.image_url.label(class="form-label") }}
+                        {{ form.image_url(class="form-control") }}
+                        <small class="form-text text-muted">Or upload images below</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.capacity.label(class="form-label") }}
+                        {{ form.capacity(class="form-control") }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{ form.owner_id.label(class="form-label") }}
+                    {{ form.owner_id(class="form-select") }}
+                    <small class="form-text text-muted">Select the owner of this resource (defaults to you)</small>
+                    {% if form.owner_id.errors %}
+                        <div class="text-danger">
+                            {% for error in form.owner_id.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.images.label(class="form-label") }}
+                    {{ form.images(class="form-control", accept="image/*") }}
+                    <small class="form-text text-muted">You can select multiple images (JPG, PNG, GIF, WEBP)</small>
+                    {% if form.images.errors %}
+                        <div class="text-danger">
+                            {% for error in form.images.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.is_available(class="form-check-input") }}
+                        {{ form.is_available.label(class="form-check-label") }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.is_featured(class="form-check-input") }}
+                        {{ form.is_featured.label(class="form-check-label") }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        {{ form.requires_approval(class="form-check-input") }}
+                        {{ form.requires_approval.label(class="form-check-label") }}
+                        <small class="form-text text-muted d-block">If checked, bookings for this resource will require admin approval before becoming active.</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
+                    <small class="form-text text-muted">Draft resources are not visible to users. Published resources appear in search and listings. Archived resources are hidden from public view.</small>
+                    {% if form.status.errors %}
+                        <div class="text-danger">
+                            {% for error in form.status.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    {{ form.equipment.label(class="form-label") }}
+                    {{ form.equipment(class="form-control", rows=3) }}
+                    <small class="form-text text-muted">{{ form.equipment.description }}</small>
+                    {% if form.equipment.errors %}
+                        <div class="text-danger">
+                            {% for error in form.equipment.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('resources.search') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Resource</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ current_user.first_name if current_user.first_name else current_user.username }}</h2>
+
+<div class="row mt-4">
+    <!-- Quick Stats -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">My Bookings</h5>
+                <p class="card-text">
+                    Active: {{ active_bookings|default(0) }}<br>
+                    Pending: {{ pending_bookings|default(0) }}
+                </p>
+                <a href="{{ url_for('booking.list') }}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Messages</h5>
+                <p class="card-text">
+                    Unread: {{ unread_messages|default(0) }}<br>
+                    Total: {{ total_messages|default(0) }}
+                </p>
+                <a href="{{ url_for('message.inbox') }}" class="btn btn-primary">View Messages</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('resources.search') }}" class="btn btn-outline-primary">Book Resource</a>
+                    <a href="{{ url_for('message.inbox') }}" class="btn btn-outline-primary">Check Messages</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="mt-4">
+    <h3>Recent Activity</h3>
+    {% if recent_activities %}
+        <div class="list-group">
+            {% for activity in recent_activities %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ activity.title }}</h5>
+                        <small>{{ activity.timestamp }}</small>
+                    </div>
+                    <p class="mb-1">{{ activity.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No recent activity to display.</p>
+    {% endif %}
+</div>
+
+<!-- Upcoming Bookings -->
+<div class="mt-4">
+    <h3>Upcoming Bookings</h3>
+    {% if upcoming_bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Resource</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in upcoming_bookings %}
+                        <tr>
+                            <td>{{ booking.resource.name }}</td>
+                            <td>{{ booking.start_date.strftime('%Y-%m-%d') if booking.start_date else '' }}</td>
+                            <td>{{ booking.start_date.strftime('%H:%M') if booking.start_date else '' }} - {{ booking.end_date.strftime('%H:%M') if booking.end_date else '' }}</td>
+                            <td><span class="badge bg-{{ booking.status_color }}">{{ booking.status }}</span></td>
+                            <td>
+                                <a href="{{ url_for('booking.details', id=booking.id) }}" class="btn btn-sm btn-info">Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No upcoming bookings.</p>
+    {% endif %}
+</div>
+{% endblock %}

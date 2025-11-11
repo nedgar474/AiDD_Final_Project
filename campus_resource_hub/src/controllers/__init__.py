@@ -1,0 +1,1 @@
+# AI Contribution: Generated initial scaffold, verified by team.
