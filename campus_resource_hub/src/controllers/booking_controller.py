@@ -28,7 +28,15 @@ subscription_dao = CalendarSubscriptionDAO()
 def list():
     """Display user's bookings."""
     # Get all bookings for the current user using DAL
-    bookings = booking_dao.get_by_user(current_user.id)
+    all_bookings = booking_dao.get_by_user(current_user.id)
+    # Filter to show only parent bookings (not child bookings in recurring series)
+    # This means: bookings with no parent_booking_id (they are either standalone or the parent of a series)
+    bookings = [b for b in all_bookings if b.parent_booking_id is None]
+    # Eager load child_bookings relationship for recurring bookings
+    for booking in bookings:
+        if booking.recurrence_type:
+            # Access the relationship to ensure it's loaded
+            _ = booking.child_bookings
     # Get all waitlist entries for the current user using DAL
     waitlist_entries = waitlist_dao.get_by_user(current_user.id, status='pending')
     return render_template('bookings/list.html', bookings=bookings, waitlist_entries=waitlist_entries)
@@ -37,13 +45,25 @@ def list():
 @login_required
 def details(id):
     """Display booking details."""
+    from ..forms import CancelBookingForm
+    
     booking = booking_dao.get_or_404(id)
     
     # Ensure the booking belongs to the current user (unless admin)
     if booking.user_id != current_user.id and current_user.role != 'admin':
         abort(403)
     
-    return render_template('bookings/details.html', booking=booking)
+    # If this is a child booking, redirect to parent booking details
+    if booking.parent_booking_id:
+        return redirect(url_for('booking.details', id=booking.parent_booking_id))
+    
+    # Get child bookings count for display
+    child_bookings = booking_dao.get_recurring_children(booking.id) if booking.recurrence_type else []
+    
+    # Create form for cancel action
+    cancel_form = CancelBookingForm()
+    
+    return render_template('bookings/details.html', booking=booking, child_bookings=child_bookings, cancel_form=cancel_form)
 
 @booking_bp.route('/<int:id>/cancel', methods=['POST'])
 @login_required
@@ -65,30 +85,50 @@ def cancel(id):
         return redirect(url_for('booking.details', id=id))
     
     try:
-        # Cancel the booking
-        booking_dao.update_status(id, 'cancelled')
+        # If this is a child booking, get the parent to cancel the whole series
+        if booking.parent_booking_id:
+            parent_booking = booking_dao.get_by_id(booking.parent_booking_id)
+            if parent_booking:
+                booking = parent_booking  # Cancel from the parent
         
-        # If this is a recurring booking, cancel all child bookings
+        # Cancel the parent booking
+        booking.status = 'cancelled'
+        db.session.flush()
+        
+        # If this is a recurring booking (has recurrence_type), cancel all child bookings
         if booking.recurrence_type:
-            # This is a parent booking - cancel all children
-            child_bookings = booking_dao.get_recurring_children(id)
+            child_bookings = booking_dao.get_recurring_children(booking.id)
+            cancelled_count = 1  # Count the parent
             for child in child_bookings:
                 if child.status not in ['cancelled', 'completed']:
-                    booking_dao.update_status(child.id, 'cancelled')
+                    child.status = 'cancelled'
+                    cancelled_count += 1
                     # Send notification for each cancelled child booking
                     from ..utils.notifications import notify_booking_cancelled
                     notify_booking_cancelled(child, cancelled_by_user=True)
-        elif booking.parent_booking_id:
-            # This is a child booking - cancel it and potentially notify about the series
-            pass  # Already handled above
+            
+            # Commit all cancellations
+            db.session.commit()
+            
+            # Send notification for parent booking
+            from ..utils.notifications import notify_booking_cancelled
+            notify_booking_cancelled(booking, cancelled_by_user=True)
+            
+            if cancelled_count > 1:
+                flash(f'Successfully cancelled recurring booking series ({cancelled_count} instances).', 'success')
+            else:
+                flash('Booking cancelled successfully.', 'success')
+        else:
+            # Single booking (not recurring)
+            db.session.commit()
+            from ..utils.notifications import notify_booking_cancelled
+            notify_booking_cancelled(booking, cancelled_by_user=True)
+            flash('Booking cancelled successfully.', 'success')
         
-        # Send notification
-        from ..utils.notifications import notify_booking_cancelled
-        notify_booking_cancelled(booking, cancelled_by_user=True)
-        
-        flash('Booking cancelled successfully.', 'success')
-        return redirect(url_for('booking.details', id=id))
+        return redirect(url_for('booking.list'))
     except Exception as e:
+        import logging
+        logging.error(f"Error cancelling booking: {str(e)}")
         db.session.rollback()
         flash(f'An error occurred while cancelling the booking: {str(e)}', 'error')
         return redirect(url_for('booking.details', id=id))

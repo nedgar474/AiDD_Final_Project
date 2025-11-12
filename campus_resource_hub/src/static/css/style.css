@@ -1,68 +1,482 @@
-/* Custom styles for Campus Resource Hub */
+/* ============================================
+   Campus Resource Hub - IU Brand Compliant Styles
+   Indiana University Brand Guidelines
+   ============================================ */
 
+/* 1. IU CSS Variables */
+:root {
+    /* IU Primary Colors */
+    --iu-crimson: #990000;
+    --iu-crimson-hover: #b30000;
+    --iu-crimson-light: #cc0000;
+    --iu-cream: #EDEBEB;
+    --iu-white: #ffffff;
+    
+    /* IU Secondary Colors (Gold selected as primary secondary) */
+    --iu-gold: #F1BE48;
+    --iu-gold-hover: #f5c968;
+    --iu-mint: #008264;
+    --iu-midnight: #006298;
+    
+    /* Neutral Grays */
+    --iu-gray-light: #f5f5f5;
+    --iu-gray-medium: #cccccc;
+    --iu-gray-dark: #666666;
+    --iu-text-primary: #333333;
+    --iu-text-secondary: #666666;
+    --iu-border-color: #e5e7eb;
+    
+    /* Bootstrap Overrides - IU Crimson as Primary */
+    --bs-primary: var(--iu-crimson);
+    --bs-primary-rgb: 153, 0, 0;
+    --bs-primary-hover: var(--iu-crimson-hover);
+    
+    /* Shadows (subtle, professional) */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. Base Styles - IU Typography */
 body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
+    color: var(--iu-text-primary);
+    background-color: var(--iu-white);
+    line-height: 1.6;
+}
+
+/* 3. Typography - IU Font Stack */
+/* Headings - Serif (Georgia Pro/Georgia) */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia Pro', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--iu-text-primary);
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
+
+/* Body Text - Sans-serif (Franklin Gothic/Arial) */
+p, li, td, th, label, input, textarea, select, button {
+    font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
 }
 
 main {
     flex: 1;
 }
 
+/* 4. First Section Requirement (IU Accessibility) */
+.first-section,
+.container > .py-5:first-child,
+.container > section:first-child {
+    background-color: var(--iu-white);
+    color: var(--iu-text-primary);
+}
+
+/* 5. Footer */
 .footer {
     margin-top: auto;
     padding: 1rem 0;
-    background-color: #f8f9fa;
-    border-top: 1px solid #e7e7e7;
+    background-color: var(--iu-gray-light);
+    border-top: 1px solid var(--iu-border-color);
 }
 
-/* Card styling */
+/* 6. Card Styling - IU Compliant */
 .card {
     margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--iu-border-color);
+    background-color: var(--iu-white);
+    border-radius: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Navigation */
+.card-body {
+    padding: 1.5rem;
+}
+
+/* 6.5. Site Banner */
+.site-banner {
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1020;
+}
+
+.banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+/* 7. Navigation - IU Crimson */
 .navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 1030; /* Higher than sidebar to overlap it */
 }
 
-/* Jumbotron styling (Bootstrap 5 custom) */
-.jumbotron {
-    padding: 4rem 2rem;
-    margin-bottom: 2rem;
-    background-color: #e9ecef;
-    border-radius: .3rem;
+.navbar-dark.bg-primary {
+    background-color: var(--iu-crimson) !important;
 }
 
-/* Status badges */
-.badge {
-    padding: 0.5em 0.8em;
+.navbar-brand {
+    font-family: 'Georgia Pro', Georgia, serif;
+    font-weight: 600;
 }
 
-/* Sidebar styling */
+/* 8. Sidebar Styling - IU Compliant */
 .sidebar {
     box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    background-color: var(--iu-white);
+    position: fixed;
+    top: 0; /* Start at the very top */
+    left: 0;
+    min-height: 100vh; /* Full viewport height */
+    z-index: 1000;
+}
+
+.sidebar-content {
+    padding-top: calc(120px + 56px + 2rem) !important; /* Banner height (120px) + Navbar height (56px) + extra spacing (2rem = 32px) = 208px total */
 }
 
 .sidebar .nav-link {
     padding: 0.75rem 1rem;
     border-radius: 0.25rem;
     transition: background-color 0.2s, color 0.2s;
+    color: var(--iu-text-primary);
 }
 
 .sidebar .nav-link:hover {
-    background-color: #e9ecef;
-    color: #0d6efd !important;
+    background-color: var(--iu-gray-light);
+    color: var(--iu-crimson) !important;
 }
 
 .sidebar .nav-link.active {
-    background-color: #0d6efd;
-    color: white !important;
+    background-color: var(--iu-crimson);
+    color: var(--iu-white) !important;
+}
+
+/* 9. Buttons - IU Crimson Primary */
+.btn-primary {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+    color: var(--iu-white);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--iu-crimson-hover);
+    border-color: var(--iu-crimson-hover);
+    color: var(--iu-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:active {
+    background-color: var(--iu-crimson);
+    transform: translateY(0);
+}
+
+.btn-outline-primary {
+    color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+    color: var(--iu-white);
+}
+
+/* Secondary Button (using IU Gold) */
+.btn-secondary {
+    background-color: var(--iu-gold);
+    border-color: var(--iu-gold);
+    color: var(--iu-text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--iu-gold-hover);
+    border-color: var(--iu-gold-hover);
+}
+
+/* 10. Form Elements - IU Compliant */
+.form-control:focus {
+    border-color: var(--iu-crimson);
+    box-shadow: 0 0 0 0.2rem rgba(153, 0, 0, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--iu-crimson);
+    box-shadow: 0 0 0 0.2rem rgba(153, 0, 0, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+}
+
+.form-check-input:focus {
+    border-color: var(--iu-crimson);
+    box-shadow: 0 0 0 0.2rem rgba(153, 0, 0, 0.25);
+}
+
+/* 11. Badges - IU Colors */
+.badge.bg-primary {
+    background-color: var(--iu-crimson) !important;
+}
+
+.badge.bg-success {
+    background-color: #10b981 !important;
+}
+
+.badge.bg-danger {
+    background-color: #ef4444 !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--iu-gold) !important;
+    color: var(--iu-text-primary) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--iu-midnight) !important;
+}
+
+/* 12. Links - IU Crimson */
+a {
+    color: var(--iu-crimson);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--iu-crimson-hover);
+    text-decoration: underline;
+}
+
+a.text-primary {
+    color: var(--iu-crimson) !important;
+}
+
+a.text-primary:hover {
+    color: var(--iu-crimson-hover) !important;
+}
+
+/* 13. Tables - IU Compliant */
+.table-hover tbody tr:hover {
+    background-color: var(--iu-gray-light);
+}
+
+.table thead th {
+    background-color: var(--iu-gray-light);
+    color: var(--iu-text-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--iu-crimson);
+}
+
+/* 14. Modals - IU Compliant */
+.modal-header {
+    background-color: var(--iu-crimson);
+    color: var(--iu-white);
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--iu-border-color);
+}
+
+/* 15. Jumbotron/Hero Sections - IU Compliant */
+.jumbotron {
+    padding: 4rem 2rem;
+    margin-bottom: 2rem;
+    background-color: var(--iu-white);
+    border-radius: 0.5rem;
+}
+
+/* 16. Status Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+
+/* 17. Alert Messages - IU Compliant */
+.alert-primary {
+    background-color: rgba(153, 0, 0, 0.1);
+    border-color: var(--iu-crimson);
+    color: var(--iu-crimson);
+}
+
+.alert-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+    color: #059669;
+}
+
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #dc2626;
+}
+
+.alert-warning {
+    background-color: rgba(241, 190, 72, 0.1);
+    border-color: var(--iu-gold);
+    color: #92400e;
+}
+
+.alert-info {
+    background-color: rgba(0, 98, 152, 0.1);
+    border-color: var(--iu-midnight);
+    color: var(--iu-midnight);
+}
+
+/* 18. Focus States - Accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.nav-link:focus {
+    outline: 2px solid var(--iu-crimson);
+    outline-offset: 2px;
+}
+
+/* 19. Text Colors - IU Compliant */
+.text-primary {
+    color: var(--iu-crimson) !important;
+}
+
+.text-muted {
+    color: var(--iu-text-secondary) !important;
+}
+
+/* 20. Background Colors - IU Compliant */
+.bg-primary {
+    background-color: var(--iu-crimson) !important;
+}
+
+.bg-light {
+    background-color: var(--iu-gray-light) !important;
+}
+
+/* 21. Resource Cards - Enhanced */
+.resource-card {
+    border: 1px solid var(--iu-border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.resource-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--iu-crimson);
+}
+
+/* 22. Chatbot/Concierge - IU Compliant */
+#concierge-chatbot .card-header {
+    background-color: var(--iu-crimson);
+    color: var(--iu-white);
+}
+
+#concierge-chatbot .bg-primary {
+    background-color: var(--iu-crimson) !important;
+}
+
+/* 23. Loading States */
+.spinner-border {
+    border-color: var(--iu-crimson);
+    border-right-color: transparent;
+}
+
+/* 24. Pagination - IU Compliant */
+.page-link {
+    color: var(--iu-crimson);
+    border-color: var(--iu-border-color);
+}
+
+.page-link:hover {
+    color: var(--iu-crimson-hover);
+    background-color: var(--iu-gray-light);
+    border-color: var(--iu-crimson);
+}
+
+.page-item.active .page-link {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+}
+
+/* 25. Dropdown Menus - IU Compliant */
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--iu-gray-light);
+    color: var(--iu-crimson);
+}
+
+.dropdown-item.active {
+    background-color: var(--iu-crimson);
+    color: var(--iu-white);
+}
+
+/* 26. Progress Bars - IU Compliant */
+.progress-bar {
+    background-color: var(--iu-crimson);
+}
+
+/* 27. Breadcrumbs - IU Compliant */
+.breadcrumb-item a {
+    color: var(--iu-crimson);
+}
+
+.breadcrumb-item.active {
+    color: var(--iu-text-secondary);
+}
+
+/* 28. List Groups - IU Compliant */
+.list-group-item.active {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+}
+
+.list-group-item-action:hover {
+    background-color: var(--iu-gray-light);
+    color: var(--iu-crimson);
+}
+
+/* 29. Utilities - First Section White Requirement */
+.first-section-white {
+    background-color: var(--iu-white) !important;
+    color: var(--iu-text-primary) !important;
+}
+
+/* 30. Responsive Adjustments */
+@media (max-width: 768px) {
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.75rem; }
+    h3 { font-size: 1.5rem; }
+    
+    .card-body {
+        padding: 1rem;
+    }
 }

@@ -280,3 +280,7 @@ class ReviewForm(FlaskForm):
                         coerce=int, validators=[DataRequired(), NumberRange(min=1, max=5, message='Rating must be between 1 and 5')])
     review_text = TextAreaField('Review', validators=[Optional(), Length(max=1000)])
 
+class CancelBookingForm(FlaskForm):
+    """Simple form for cancelling bookings with CSRF protection."""
+    pass
+

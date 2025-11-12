@@ -46,18 +46,53 @@ class LLMClient:
                 temperature=temperature,
                 max_tokens=max_tokens
             )
-            return response.choices[0].message.content
+            if response and response.choices and len(response.choices) > 0:
+                content = response.choices[0].message.content
+                if content:
+                    return content
+                else:
+                    print("OpenAI API returned empty content in response")
+                    return None
+            else:
+                print("OpenAI API returned empty response (no choices)")
+                return None
         except openai.AuthenticationError as e:
-            print(f"OpenAI Authentication Error: Invalid API key. {e}")
-            return None
+            error_msg = f"OpenAI Authentication Error: Invalid API key. {e}"
+            print(error_msg)
+            import logging
+            logging.error(error_msg)
+            raise ValueError(f"Invalid API key: {e}") from e
         except openai.RateLimitError as e:
-            print(f"OpenAI Rate Limit Error: {e}")
+            error_msg = f"OpenAI Rate Limit Error: {e}"
+            print(error_msg)
+            import logging
+            logging.error(error_msg)
+            # Extract retry-after information if available
+            retry_after = None
+            if hasattr(e, 'response') and e.response is not None:
+                retry_after = e.response.headers.get('retry-after')
+            # Raise a custom exception with retry info so we can handle it better
+            raise ValueError(f"Rate limit exceeded. Please wait a moment and try again. {f'Retry after {retry_after} seconds.' if retry_after else ''}") from e
+        except openai.APIConnectionError as e:
+            error_msg = f"OpenAI API Connection Error: {e}"
+            print(error_msg)
+            import logging
+            logging.error(error_msg)
             return None
         except openai.APIError as e:
-            print(f"OpenAI API Error: {e}")
+            error_msg = f"OpenAI API Error: {e}"
+            print(error_msg)
+            import logging
+            logging.error(error_msg)
             return None
         except Exception as e:
-            print(f"LLM Error: {e}")
+            error_msg = f"LLM Error: {e}"
+            print(error_msg)
+            import logging
+            import traceback
+            logging.error(error_msg)
+            logging.error(traceback.format_exc())
+            traceback.print_exc()
             return None
     
     def is_available(self) -> bool:
@@ -74,8 +109,40 @@ class LLMClient:
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=5
             )
+            # Check if we got a valid response
+            if response and response.choices and len(response.choices) > 0:
+                content = response.choices[0].message.content
+                if content:
+                    return True
+            print("OpenAI API returned empty response in health check")
+            return False
+        except openai.AuthenticationError as e:
+            print(f"OpenAI Authentication Error in health check: {e}")
+            import logging
+            logging.error(f"OpenAI Authentication Error in health check: {e}")
+            return False
+        except openai.RateLimitError as e:
+            print(f"OpenAI Rate Limit Error in health check: {e}")
+            import logging
+            logging.warning(f"OpenAI Rate Limit Error in health check: {e}")
+            # Rate limit means API is available, just throttled
             return True
-        except Exception:
+        except openai.APIConnectionError as e:
+            print(f"OpenAI API Connection Error in health check: {e}")
+            import logging
+            logging.error(f"OpenAI API Connection Error in health check: {e}")
+            return False
+        except openai.APIError as e:
+            print(f"OpenAI API Error in health check: {e}")
+            import logging
+            logging.error(f"OpenAI API Error in health check: {e}")
+            return False
+        except Exception as e:
+            print(f"Error checking LLM availability: {e}")
+            import logging
+            import traceback
+            logging.error(f"Error checking LLM availability: {e}")
+            logging.error(traceback.format_exc())
             return False
     
     def summarize_context(self, context: str, max_length: int = 1000) -> str:

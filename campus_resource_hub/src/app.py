@@ -41,6 +41,16 @@ def create_app(config_name='default'):
             return ""
         return value.strftime('%Y-%m-%d')
     
+    # Make csrf_token available as a template function
+    @app.template_global()
+    def csrf_token():
+        """Generate CSRF token for templates."""
+        from flask import request, session
+        # Ensure we're in a request context
+        if hasattr(request, 'csrf_token'):
+            return request.csrf_token
+        return csrf.generate_csrf()
+    
     # Configure Flask-Login
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'

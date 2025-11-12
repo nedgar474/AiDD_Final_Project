@@ -30,7 +30,7 @@
                         {% endif %}
                     {% endwith %}
                     
-                    <form method="POST">
+                    <form method="POST" action="{{ url_for('resources.book', id=resource.id) }}" novalidate>
                         {{ form.hidden_tag() }}
                         
                         <!-- Calendar View -->
@@ -46,9 +46,9 @@
                         </div>
                         
                         <!-- Date/Time Inputs (hidden but required for form submission) -->
-                        <div class="mb-3" style="display: none;">
+                        <div class="mb-3" style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
                             {{ form.start_date.label(class="form-label") }}
-                            {{ form.start_date(id="start_date", class="form-control" + (" is-invalid" if form.start_date.errors else "")) }}
+                            {{ form.start_date(id="start_date", class="form-control" + (" is-invalid" if form.start_date.errors else ""), **{"novalidate": ""}) }}
                             {% if form.start_date.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.start_date.errors %}
@@ -58,9 +58,9 @@
                             {% endif %}
                         </div>
 
-                        <div class="mb-3" style="display: none;">
+                        <div class="mb-3" style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
                             {{ form.end_date.label(class="form-label") }}
-                            {{ form.end_date(id="end_date", class="form-control" + (" is-invalid" if form.end_date.errors else "")) }}
+                            {{ form.end_date(id="end_date", class="form-control" + (" is-invalid" if form.end_date.errors else ""), **{"novalidate": ""}) }}
                             {% if form.end_date.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.end_date.errors %}
@@ -75,6 +75,11 @@
                             <strong>Selected Time:</strong>
                             <span id="selected-start-time"></span> to <span id="selected-end-time"></span>
                             <br><small class="text-muted">Click once to set start time, twice to set end time, three times to clear.</small>
+                        </div>
+                        
+                        <!-- Validation Error Display -->
+                        <div class="alert alert-danger mb-3" id="validation-error" style="display: none;">
+                            <strong>Error:</strong> <span id="validation-error-message"></span>
                         </div>
 
                         <div class="mb-3">
@@ -412,11 +417,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Set minimum date to today for hidden inputs
-    const today = new Date().toISOString().slice(0, 16);
-    startDateInput.min = today;
-    endDateInput.min = today;
+    // Remove min attribute to avoid HTML5 validation issues with hidden inputs
+    // We'll validate in JavaScript instead
+    startDateInput.removeAttribute('min');
+    endDateInput.removeAttribute('min');
     if (recurrenceEndDate) {
+        const today = new Date().toISOString().slice(0, 16);
         recurrenceEndDate.min = today;
     }
 
@@ -453,13 +459,141 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Form validation - ensure dates are selected
-    document.querySelector('form').addEventListener('submit', function(e) {
-        if (!startDateInput.value || !endDateInput.value) {
-            e.preventDefault();
-            alert('Please select a date and time range from the calendar.');
-            return false;
+    const bookingForm = document.querySelector('form');
+    const validationError = document.getElementById('validation-error');
+    const validationErrorMessage = document.getElementById('validation-error-message');
+    const submitButton = bookingForm ? bookingForm.querySelector('button[type="submit"]') : null;
+    
+    function showValidationError(message) {
+        if (validationError && validationErrorMessage) {
+            validationErrorMessage.textContent = message;
+            validationError.style.display = 'block';
+            // Scroll to error
+            validationError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            alert(message);
         }
-    });
+    }
+    
+    function hideValidationError() {
+        if (validationError) {
+            validationError.style.display = 'none';
+        }
+    }
+    
+    // Add click handler to submit button for debugging
+    if (submitButton) {
+        submitButton.addEventListener('click', function(e) {
+            console.log('Submit button clicked!');
+            console.log('Start date input:', startDateInput);
+            console.log('End date input:', endDateInput);
+            console.log('Start date value:', startDateInput ? startDateInput.value : 'N/A');
+            console.log('End date value:', endDateInput ? endDateInput.value : 'N/A');
+            console.log('Form:', bookingForm);
+            console.log('Form action:', bookingForm ? bookingForm.action : 'N/A');
+            console.log('Form method:', bookingForm ? bookingForm.method : 'N/A');
+        }, true); // Use capture phase to catch early
+    }
+    
+    if (bookingForm) {
+        console.log('Booking form found, attaching submit handler');
+        
+        bookingForm.addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
+            console.log('Start date value:', startDateInput ? startDateInput.value : 'N/A');
+            console.log('End date value:', endDateInput ? endDateInput.value : 'N/A');
+            
+            // Hide any previous errors
+            hideValidationError();
+            
+            // Check if inputs exist
+            if (!startDateInput || !endDateInput) {
+                console.error('Date inputs not found!');
+                e.preventDefault();
+                showValidationError('Form inputs not found. Please refresh the page.');
+                return false;
+            }
+            
+            // Check if dates are selected
+            if (!startDateInput.value || !endDateInput.value) {
+                console.log('Dates not selected, preventing submission');
+                e.preventDefault();
+                e.stopPropagation();
+                showValidationError('Please select a date and time range from the calendar. Click once to set start time, twice to set end time.');
+                return false;
+            }
+            
+            // Validate that end date is after start date
+            if (startDateInput.value && endDateInput.value) {
+                const start = new Date(startDateInput.value);
+                const end = new Date(endDateInput.value);
+                const now = new Date();
+                
+                if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                    console.log('Invalid date format');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showValidationError('Invalid date format. Please select dates from the calendar.');
+                    return false;
+                }
+                
+                // Allow booking up to 5 minutes in the past (for edge cases)
+                const minAllowedTime = new Date(now.getTime() - 5 * 60 * 1000);
+                
+                if (start < minAllowedTime) {
+                    console.log('Start time is too far in the past');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showValidationError('Start time cannot be more than 5 minutes in the past. Please select a future time.');
+                    return false;
+                }
+                
+                if (end <= start) {
+                    console.log('End date not after start date');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showValidationError('End time must be after start time. Please select a valid time range.');
+                    return false;
+                }
+                
+                // Ensure minimum booking duration (at least 15 minutes)
+                const duration = (end - start) / (1000 * 60); // duration in minutes
+                if (duration < 15) {
+                    console.log('Booking duration too short');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showValidationError('Booking duration must be at least 15 minutes.');
+                    return false;
+                }
+            }
+            
+            console.log('Form validation passed, submitting...');
+            // Show loading state
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting...';
+            }
+            
+            // Allow form to submit
+            return true;
+        });
+        
+        console.log('Submit handler attached to form');
+    } else {
+        console.error('Booking form not found!');
+    }
+    
+    // Hide validation error when dates are selected
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            console.log('Start date changed:', this.value);
+            hideValidationError();
+        });
+        endDateInput.addEventListener('change', function() {
+            console.log('End date changed:', this.value);
+            hideValidationError();
+        });
+    }
 });
 </script>
 {% endblock %}

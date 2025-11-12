@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Campus Resource Hub{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +13,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Banner Image -->
+    <div class="site-banner">
+        <img src="{{ url_for('static', filename='uploads/gates.webp') }}" alt="Campus Banner" class="banner-image">
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">Campus Resource Hub</a>
@@ -31,7 +37,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                    {% if current_user.role == 'admin' %}
+                    {% if current_user.role == 'admin' or current_user.role == 'staff' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
                     </li>
@@ -64,8 +70,8 @@
     <div class="d-flex">
         {% if current_user.is_authenticated %}
         <!-- Fixed Sidebar -->
-        <nav class="sidebar bg-light border-end" style="width: 250px; min-height: calc(100vh - 56px); position: fixed; top: 56px; left: 0; overflow-y: auto; z-index: 1000;">
-            <div class="p-3">
+        <nav class="sidebar bg-light border-end" style="width: 250px; overflow-y: auto;">
+            <div class="p-3 sidebar-content">
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2">
                         <a class="nav-link text-dark" href="{{ url_for('main.index') }}">
@@ -92,7 +98,7 @@
                             <i class="fas fa-envelope me-2"></i> Messages
                         </a>
                     </li>
-                    {% if current_user.role == 'admin' %}
+                    {% if current_user.role == 'admin' or current_user.role == 'staff' %}
                     <li class="nav-item mb-2">
                         <a class="nav-link text-dark" href="{{ url_for('admin.dashboard') }}">
                             <i class="fas fa-cog me-2"></i> Administrative Dashboard
@@ -105,7 +111,7 @@
         {% endif %}
 
         <!-- Main Content Area -->
-        <main class="flex-grow-1" style="{% if current_user.is_authenticated %}margin-left: 250px;{% endif %}">
+        <main class="flex-grow-1 first-section-white" style="{% if current_user.is_authenticated %}margin-left: 250px;{% endif %}">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -197,43 +203,82 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if concierge is available
-        fetch('{{ url_for("concierge.health") }}')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Health check failed');
-                }
-                return response.json();
+        const healthCheckUrl = '{{ url_for("concierge.health") }}';
+        console.log('Concierge health check URL:', healthCheckUrl);
+        
+        // Only make the request if URL is valid
+        if (!healthCheckUrl || healthCheckUrl.includes('None') || healthCheckUrl.trim() === '') {
+            console.warn('Invalid concierge health check URL, skipping health check');
+            const toggleBtn = document.getElementById('concierge-toggle');
+            if (toggleBtn) {
+                toggleBtn.style.display = 'none';
+            }
+        } else {
+            fetch(healthCheckUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+                cache: 'no-cache'
             })
-            .then(data => {
-                if (data.available) {
-                    // Show toggle button if concierge is available
-                    const toggleBtn = document.getElementById('concierge-toggle');
-                    if (toggleBtn) {
-                        toggleBtn.style.display = 'block';
+                .then(response => {
+                    console.log('Health check response status:', response.status);
+                    if (!response.ok && response.status !== 200) {
+                        // Even if not OK, try to parse JSON for error details
+                        return response.json().then(data => {
+                            throw new Error(`Health check failed with status ${response.status}: ${data.error || response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`Health check failed with status ${response.status}`);
+                        });
                     }
-                } else {
-                    // Hide concierge UI if not available, but don't hide if already open
+                    // Always try to parse JSON, even if status is not 200
+                    return response.json().catch(() => {
+                        throw new Error('Failed to parse health check response');
+                    });
+                })
+                .then(data => {
+                    console.log('Concierge health check response:', data);
                     const toggleBtn = document.getElementById('concierge-toggle');
                     const chatbot = document.getElementById('concierge-chatbot');
-                    if (toggleBtn && chatbot.style.display === 'none') {
+                    
+                    if (data.available) {
+                        // Show toggle button if concierge is available
+                        if (toggleBtn) {
+                            toggleBtn.style.display = 'block';
+                            toggleBtn.title = 'Open Resource Concierge';
+                        }
+                    } else {
+                        // Hide concierge UI if not available, but don't hide if already open
+                        if (toggleBtn && chatbot && chatbot.style.display === 'none') {
+                            toggleBtn.style.display = 'none';
+                        }
+                        // Only hide chatbot if it's not currently open
+                        if (chatbot && chatbot.style.display === 'none') {
+                            chatbot.style.display = 'none';
+                        }
+                        // Log the error for debugging
+                        if (data.error) {
+                            console.error('Concierge not available:', data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    // Log error but don't hide chatbot if it's already open
+                    console.error('Concierge health check failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        name: error.name,
+                        stack: error.stack
+                    });
+                    const toggleBtn = document.getElementById('concierge-toggle');
+                    const chatbot = document.getElementById('concierge-chatbot');
+                    // Only hide if chatbot is not currently visible
+                    if (toggleBtn && chatbot && chatbot.style.display === 'none') {
                         toggleBtn.style.display = 'none';
                     }
-                    // Only hide chatbot if it's not currently open
-                    if (chatbot && chatbot.style.display === 'none') {
-                        chatbot.style.display = 'none';
-                    }
-                }
-            })
-            .catch(error => {
-                // Log error but don't hide chatbot if it's already open
-                console.warn('Concierge health check failed:', error);
-                const toggleBtn = document.getElementById('concierge-toggle');
-                const chatbot = document.getElementById('concierge-chatbot');
-                // Only hide if chatbot is not currently visible
-                if (toggleBtn && chatbot && chatbot.style.display === 'none') {
-                    toggleBtn.style.display = 'none';
-                }
-            });
+                });
+        }
         
         const chatbot = document.getElementById('concierge-chatbot');
         const toggleBtn = document.getElementById('concierge-toggle');
@@ -354,16 +399,39 @@
                 chatHistory.scrollTop = chatHistory.scrollHeight;
                 
                 // Send query to backend
-                fetch('{{ url_for("concierge.query") }}', {
+                const queryUrl = '{{ url_for("concierge.query") }}';
+                console.log('Sending query to:', queryUrl);
+                console.log('Query:', query);
+                
+                // Validate URL before making request
+                if (!queryUrl || queryUrl.includes('None') || queryUrl.trim() === '') {
+                    console.error('Invalid query URL:', queryUrl);
+                    const loading = document.getElementById('concierge-loading');
+                    if (loading) loading.remove();
+                    addMessage('Error: Invalid server URL. Please refresh the page and try again.', isUser=false);
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    return;
+                }
+                
+                fetch(queryUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'same-origin', // Include cookies for authentication
                     body: JSON.stringify({ query: query })
                 })
                 .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        // Try to get error message from response
+                        return response.json().then(errData => {
+                            throw new Error(`HTTP ${response.status}: ${errData.error || response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        });
                     }
                     return response.json();
                 })
@@ -386,12 +454,25 @@
                 })
                 .catch(error => {
                     console.error('Concierge error:', error);
+                    console.error('Error type:', error.constructor.name);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
                     const loading = document.getElementById('concierge-loading');
                     if (loading) loading.remove();
                     // Don't hide chatbot on error, just show error message
                     let errorMsg = 'Sorry, I\'m having trouble connecting. Please try again later.';
                     if (error.message) {
-                        errorMsg += ` (${error.message})`;
+                        // Provide more helpful error messages
+                        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                            errorMsg = 'Network error: Unable to reach the server. Please check your internet connection and try again.';
+                        } else if (error.message.includes('CORS')) {
+                            errorMsg = 'CORS error: Cross-origin request blocked. Please contact support.';
+                        } else {
+                            errorMsg += ` (${error.message})`;
+                        }
                     }
                     addMessage(errorMsg, isUser=false);
                     // Ensure chatbot stays visible

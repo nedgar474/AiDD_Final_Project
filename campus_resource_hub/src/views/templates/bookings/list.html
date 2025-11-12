@@ -29,8 +29,10 @@
                     <td>{{ booking.end_date|datetime }}</td>
                     <td>
                         {% if booking.recurrence_type %}
-                        <span class="badge bg-info" title="Repeats {{ booking.recurrence_type }} until {{ booking.recurrence_end_date|datetime if booking.recurrence_end_date else 'indefinitely' }}">
-                            {{ booking.recurrence_type|title }}
+                        {% set child_count = booking.child_bookings|length if booking.child_bookings else 0 %}
+                        {% set total_instances = child_count + 1 %}
+                        <span class="badge bg-info" title="Repeats {{ booking.recurrence_type }} until {{ booking.recurrence_end_date|datetime if booking.recurrence_end_date else 'indefinitely' }} ({{ total_instances }} total instances)">
+                            {{ booking.recurrence_type|title }} ({{ total_instances }})
                         </span>
                         {% else %}
                         <span class="text-muted">—</span>

@@ -9,8 +9,12 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    # Get featured resources for the homepage (only published)
+    from ..models.resource_image import ResourceImage
+    # Get featured resources for the homepage (only published) with images eager loaded
     featured_resources = Resource.query.filter_by(is_featured=True, status='published').limit(6).all()
+    # Eager load images for each resource
+    for resource in featured_resources:
+        resource.images = ResourceImage.query.filter_by(resource_id=resource.id).order_by(ResourceImage.display_order).all()
     categories = Resource.query.filter_by(status='published').with_entities(Resource.category).distinct().all()
     return render_template('index.html', featured_resources=featured_resources, categories=categories)
 

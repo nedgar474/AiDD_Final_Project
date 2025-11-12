@@ -6,8 +6,10 @@ class Resource(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=True)  # Legacy column for backward compatibility
     description = db.Column(db.Text)
     category = db.Column(db.String(50), nullable=False)
+    type = db.Column(db.String(50), nullable=True)  # Legacy column for backward compatibility (migrated to category)
     location = db.Column(db.String(100))
     image_url = db.Column(db.String(255))
     capacity = db.Column(db.Integer)

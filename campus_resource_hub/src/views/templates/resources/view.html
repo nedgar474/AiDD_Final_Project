@@ -275,14 +275,18 @@
 
             <!-- Booking Section -->
             {% if current_user.is_authenticated %}
-                {% if user_booking %}
+                {% if user_bookings %}
                 <div class="alert alert-info">
-                    <h5 class="alert-heading">Your Current Booking</h5>
-                    <p>Status: <span class="badge bg-{{ user_booking.status_color }}">{{ user_booking.status }}</span></p>
-                    <hr>
-                    <p class="mb-0">
-                        <a href="{{ url_for('booking.details', id=user_booking.id) }}" class="btn btn-outline-primary btn-sm">View Booking Details</a>
-                    </p>
+                    <h5 class="alert-heading">Your {{ user_bookings|length }} Booking{{ 's' if user_bookings|length > 1 else '' }}</h5>
+                    {% for booking in user_bookings %}
+                    <div class="mb-2 {% if not loop.last %}border-bottom pb-2{% endif %}">
+                        <p class="mb-1">
+                            <strong>{{ booking.start_date|datetime }} - {{ booking.end_date|datetime }}</strong>
+                            <span class="badge bg-{{ booking.status_color }} ms-2">{{ booking.status }}</span>
+                        </p>
+                        <a href="{{ url_for('booking.details', id=booking.id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
                 
@@ -296,7 +300,7 @@
                 </div>
                 {% endif %}
                 
-                {% if resource.is_available and not user_booking %}
+                {% if resource.is_available %}
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('resources.book', id=resource.id) }}" class="btn btn-primary btn-lg">Book Now</a>
                     {% if not user_waitlist %}

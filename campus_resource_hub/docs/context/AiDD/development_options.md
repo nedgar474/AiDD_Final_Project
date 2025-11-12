@@ -3402,3 +3402,850 @@ Fallback:     Gemini (if OpenAI has issues)
 **Key Insight**: GPT-4o-mini offers **better quality than Gemini at lower cost** (~$0.50 vs ~$0.88 per 10K queries), making it an excellent choice for production.
 
 ---
+
+## Professional Styling Improvements Analysis (IU Brand Guidelines)
+
+### Overview
+
+The Campus Resource Hub currently uses Bootstrap 5 with minimal custom CSS. This analysis provides comprehensive suggestions for styling improvements based on **Indiana University (IU) Brand Guidelines** to ensure the site reflects the official IU web design standards. All improvements will maintain existing functionality while aligning with IU's visual identity.
+
+### Current State Assessment
+
+**Existing Styling:**
+- Bootstrap 5.3.0 (via CDN)
+- Font Awesome 6.4.0 (icons)
+- Minimal custom CSS (`style.css` - ~68 lines)
+- Basic hover effects on cards
+- Simple sidebar and navbar styling
+- Default Bootstrap color scheme (primary blue `#0d6efd`)
+- Default system fonts (no IU typography)
+
+**Strengths:**
+- ✅ Clean, functional layout
+- ✅ Responsive Bootstrap framework
+- ✅ Consistent component usage
+- ✅ Good icon integration
+
+**Areas for Improvement (IU Brand Compliance):**
+- ⚠️ **Color Scheme**: Using generic Bootstrap blue instead of IU Crimson (#990000)
+- ⚠️ **Typography**: Not using IU-approved fonts (Georgia Pro/Georgia for headings, Franklin Gothic for body)
+- ⚠️ **Brand Identity**: Site doesn't reflect IU visual identity
+- ⚠️ **Accessibility**: First section may not be white with text (IU requirement)
+- ⚠️ **Secondary Colors**: Not utilizing IU secondary palette (Gold, Mint, Midnight)
+- ⚠️ **Background**: Not using IU Cream (#EDEBEB) or white as specified
+
+---
+
+### IU Brand Guidelines Summary
+
+Based on the IU Style Guide, the following standards must be implemented:
+
+**Colors:**
+- **Primary**: IU Crimson (#990000) - **MUST be dominant** in all communication pieces
+- **Primary/Alternate**: IU Cream (#EDEBEB) or white for backgrounds
+- **Secondary Options**: Gold (#F1BE48), Mint/Dark Mint (#008264), Midnight/Dark Midnight (#006298)
+- **Usage Rule**: Choose ONE secondary color and its tints/shades; avoid multiple secondaries simultaneously
+
+**Typography:**
+- **Headings**: Georgia Pro (preferred) or Georgia (fallback), then any serif
+- **Body Text**: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif
+
+**Accessibility Requirements:**
+- First section of page must be white with text
+- Light grays, neutrals, and white used for backgrounds and large whitespace
+- Ensure WCAG AA compliance (4.5:1 contrast ratio)
+
+---
+
+### Recommended Styling Improvements (IU Brand Compliant)
+
+#### 1. Color Scheme & Branding (IU Standards)
+
+**Current:** Generic Bootstrap blue (`#0d6efd`)
+
+**Required Changes (IU Brand Guidelines):**
+
+1. **IU Official Color Palette:**
+   - **Primary (Dominant)**: IU Crimson `#990000` (RGB: 153, 0, 0)
+     - **MUST be the dominant color** in all communication pieces
+     - Use for primary buttons, links, navigation, brand elements
+     - Override Bootstrap's default primary color
+   
+   - **Primary/Alternate**: IU Cream `#EDEBEB` (RGB: 237, 235, 235) or white
+     - Use for backgrounds and large whitespace
+     - White is often preferred for digital (cream may reproduce poorly)
+     - First section of page MUST be white with text
+   
+   - **Secondary Colors** (choose ONE and its tints/shades):
+     - **Gold**: `#F1BE48` - Supporting accent color
+     - **Mint/Dark Mint**: `#008264` - Part of broader secondary palette
+     - **Midnight/Dark Midnight**: `#006298` - Secondary "cool" accent tone
+   
+   - **Neutral Grays**: Light grays and neutrals for backgrounds and whitespace
+     - Ensure proper contrast for accessibility
+
+2. **CSS Custom Properties (IU Colors):**
+   ```css
+   :root {
+       /* IU Primary Colors */
+       --iu-crimson: #990000;
+       --iu-crimson-hover: #b30000; /* Slightly lighter for hover states */
+       --iu-cream: #EDEBEB;
+       --iu-white: #ffffff;
+       
+       /* IU Secondary Colors (choose one primary secondary) */
+       --iu-gold: #F1BE48;
+       --iu-mint: #008264;
+       --iu-midnight: #006298;
+       
+       /* Neutral Grays */
+       --iu-gray-light: #f5f5f5;
+       --iu-gray-medium: #cccccc;
+       --iu-gray-dark: #666666;
+       --iu-text-primary: #333333;
+       --iu-text-secondary: #666666;
+       
+       /* Bootstrap Overrides */
+       --bs-primary: var(--iu-crimson);
+       --bs-primary-rgb: 153, 0, 0;
+       
+       /* Shadows (subtle, professional) */
+       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+   }
+   ```
+
+3. **Color Usage Guidelines:**
+   - **Crimson Dominance**: Ensure IU Crimson is the most prominent color
+   - **Secondary Selection**: Choose ONE secondary color (recommend Gold `#F1BE48` for warmth, or Midnight `#006298` for cool contrast)
+   - **Background**: Use white or IU Cream for backgrounds
+   - **First Section**: MUST be white with text for accessibility compliance
+   - **Avoid**: Multiple secondary colors simultaneously (unless clearly justified)
+
+**Implementation:**
+- Override Bootstrap CSS variables to use IU Crimson as primary
+- Apply IU color palette consistently across all components
+- Ensure first section of every page is white background with text
+- Use CSS custom properties for maintainability
+
+---
+
+#### 2. Typography (IU Standards)
+
+**Current:** Default system fonts (not IU-compliant)
+
+**Required Changes (IU Brand Guidelines):**
+
+1. **IU Typography Stack:**
+   - **Headings (h1-h6)**: 
+     ```css
+     font-family: 'Georgia Pro', Georgia, serif;
+     ```
+     - Georgia Pro is preferred if licensed
+     - Fallback to system Georgia (widely available)
+     - Final fallback to any serif font
+   
+   - **Body Text**: 
+     ```css
+     font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
+     ```
+     - Franklin Gothic is preferred
+     - Fallback to Arial, then generic sans-serif
+
+2. **Font Loading Considerations:**
+   - **Georgia Pro**: Requires licensing compliance if embedding via @font-face
+   - **System Fonts**: Georgia and Arial are widely available (no loading needed)
+   - **Web Fonts**: If using web fonts, ensure licensing compliance
+   - **Performance**: System fonts load instantly (recommended for performance)
+
+3. **Typography Scale (IU-Compliant):**
+   ```css
+   /* Headings - Serif (Georgia Pro/Georgia) */
+   h1, h2, h3, h4, h5, h6 {
+       font-family: 'Georgia Pro', Georgia, serif;
+       font-weight: 600;
+       line-height: 1.2;
+       color: var(--iu-text-primary);
+   }
+   
+   h1 { font-size: 2.5rem; }
+   h2 { font-size: 2rem; }
+   h3 { font-size: 1.75rem; }
+   h4 { font-size: 1.5rem; }
+   h5 { font-size: 1.25rem; }
+   h6 { font-size: 1rem; }
+   
+   /* Body Text - Sans-serif (Franklin Gothic/Arial) */
+   body {
+       font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
+       font-size: 1rem;
+       line-height: 1.6;
+       color: var(--iu-text-primary);
+   }
+   ```
+
+4. **Text Hierarchy:**
+   - Clear distinction between serif headings and sans-serif body
+   - Consistent text colors using IU color variables
+   - Ensure WCAG AA contrast ratios (4.5:1 minimum)
+
+**Implementation:**
+- Update `base.html` to include font-family declarations
+- Define typography scale in CSS using IU font stack
+- Apply consistently across all templates
+- Test with system fonts first (no licensing needed)
+- Consider Georgia Pro licensing if enhanced typography desired
+
+---
+
+#### 3. Spacing & Layout Refinements (IU-Compliant)
+
+**Current:** Default Bootstrap spacing
+
+**Required Changes (IU Brand Guidelines):**
+
+1. **First Section Requirement:**
+   - **CRITICAL**: First section of every page MUST be white background with text
+   - This is an IU accessibility requirement
+   - Ensures proper contrast and readability
+   - Applies to homepage hero, page headers, etc.
+
+2. **Background & Whitespace:**
+   - Use white or IU Cream (#EDEBEB) for backgrounds
+   - Light grays and neutrals for large whitespace areas
+   - Ensure generous whitespace for readability
+   - Maintain clean, uncluttered layouts
+
+3. **Consistent Spacing System:**
+   - Use consistent spacing scale (4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px)
+   - Apply spacing consistently across components
+   - Better padding/margin on cards and containers
+   - Maintain vertical rhythm
+
+4. **Container Widths:**
+   - Max-width constraints for better readability
+   - Responsive container widths
+   - Better use of whitespace (IU standard)
+
+5. **Card Spacing:**
+   - Increased padding inside cards (1.5rem instead of 1rem)
+   - Better margin between cards
+   - Consistent card heights in grids
+   - White or light backgrounds for cards
+
+**Implementation:**
+- Ensure first section of all pages is white with text
+- Define spacing variables in CSS
+- Apply spacing utilities consistently
+- Use Bootstrap spacing classes strategically
+- Test accessibility compliance
+
+---
+
+#### 4. Component Enhancements (IU-Compliant)
+
+**Cards:**
+
+1. **Enhanced Card Design (IU Colors):**
+   - White or light background (IU Cream or white)
+   - Softer shadows with better depth
+   - Rounded corners (border-radius: 0.5rem or 0.75rem)
+   - Subtle border (1px solid var(--iu-gray-medium))
+   - Better hover effects (lift + shadow increase)
+   - Consistent card heights in grids
+   - Use IU Crimson for card accents/borders if needed
+
+2. **Card Content:**
+   - IU typography (serif headings, sans-serif body)
+   - Better typography hierarchy within cards
+   - Improved spacing between card elements
+   - Consistent button placement (IU Crimson primary buttons)
+   - Better badge/status indicator styling using IU colors
+
+**Buttons:**
+
+1. **Button Refinements (IU Crimson Primary):**
+   - **Primary Buttons**: Use IU Crimson (#990000) as background
+   - Consistent border-radius (0.375rem or 0.5rem)
+   - Better hover states (slightly lighter crimson, smooth transitions)
+   - Shadow on hover for primary buttons
+   - Consistent sizing (small, medium, large)
+   - Icon spacing improvements
+   - White text on crimson buttons for contrast
+
+2. **Button Variants:**
+   - **Primary**: IU Crimson background, white text
+   - **Secondary**: Use chosen secondary color (Gold, Mint, or Midnight)
+   - Outlined button variants (crimson border, transparent background)
+   - Ghost/transparent button styles
+   - Better disabled states (grayed out)
+
+**Forms:**
+
+1. **Form Enhancements:**
+   - Better input field styling (borders, focus states)
+   - Consistent form spacing
+   - Improved label styling
+   - Better error message presentation
+   - Success state indicators
+   - Placeholder text styling
+
+2. **Form Controls:**
+   - Custom checkbox/radio styling
+   - Better select dropdown styling
+   - Improved file upload styling
+   - Better date/time picker integration
+
+**Tables:**
+
+1. **Table Improvements:**
+   - Alternating row colors (subtle)
+   - Better header styling
+   - Hover effects on rows
+   - Improved spacing
+   - Better border styling
+   - Responsive table design
+
+**Modals:**
+
+1. **Modal Enhancements:**
+   - Better backdrop (darker, more professional)
+   - Improved modal header styling
+   - Better button placement
+   - Consistent padding
+   - Smooth animations
+
+**Navigation:**
+
+1. **Navbar Improvements:**
+   - Better logo/brand styling
+   - Improved active state indicators
+   - Better mobile menu styling
+   - Consistent spacing
+   - Subtle shadow or border
+
+2. **Sidebar Enhancements:**
+   - Better active link styling
+   - Improved hover states
+   - Icon + text alignment
+   - Better spacing
+   - Subtle background or border
+
+---
+
+#### 5. Visual Hierarchy & Depth
+
+**Shadows:**
+
+1. **Shadow System:**
+   - Small shadows for cards (`box-shadow: 0 1px 3px rgba(0,0,0,0.1)`)
+   - Medium shadows for elevated elements
+   - Large shadows for modals and dropdowns
+   - Consistent shadow colors (not pure black)
+
+2. **Depth Layers:**
+   - Base layer: No shadow or minimal
+   - Elevated layer: Small shadow
+   - Floating layer: Medium shadow
+   - Modal layer: Large shadow + backdrop
+
+**Borders:**
+
+1. **Border Refinements:**
+   - Subtle borders (1px, light gray)
+   - Rounded corners consistently
+   - Border colors that match theme
+   - Remove harsh borders where appropriate
+
+**Backgrounds:**
+
+1. **Background Variations:**
+   - Subtle pattern or texture (optional)
+   - Gradient backgrounds for hero sections
+   - Alternating section backgrounds
+   - Better contrast for content areas
+
+---
+
+#### 6. Modern Design Patterns
+
+**Glassmorphism (Optional):**
+
+1. **Frosted Glass Effect:**
+   - Semi-transparent backgrounds
+   - Backdrop blur effects
+   - Subtle borders
+   - Apply to modals, cards, or navigation
+
+**Neumorphism (Optional):**
+
+1. **Soft Shadow Design:**
+   - Inset and outset shadows
+   - Subtle, soft appearance
+   - Modern, tactile feel
+
+**Micro-interactions:**
+
+1. **Subtle Animations:**
+   - Smooth hover transitions (0.2s ease)
+   - Button press effects
+   - Card lift on hover
+   - Loading state animations
+   - Success/error message animations
+
+2. **Transitions:**
+   - Consistent transition timing (0.2s-0.3s)
+   - Ease-in-out for natural feel
+   - Hover state transitions
+   - Focus state transitions
+
+---
+
+#### 7. Responsive Design Improvements
+
+**Mobile Enhancements:**
+
+1. **Mobile-First Refinements:**
+   - Better touch targets (minimum 44x44px)
+   - Improved mobile navigation
+   - Better form inputs on mobile
+   - Optimized card layouts for small screens
+   - Better spacing on mobile
+
+2. **Tablet Optimizations:**
+   - Better use of screen space
+   - Improved grid layouts
+   - Better sidebar behavior
+
+**Breakpoint Refinements:**
+
+1. **Custom Breakpoints:**
+   - Fine-tune Bootstrap breakpoints if needed
+   - Better responsive typography
+   - Responsive spacing adjustments
+
+---
+
+#### 8. Accessibility Improvements
+
+**Color Contrast:**
+
+1. **WCAG Compliance:**
+   - Ensure all text meets WCAG AA standards (4.5:1 ratio)
+   - Better contrast for links
+   - Improved focus indicators
+   - Better error message contrast
+
+**Focus States:**
+
+1. **Visible Focus Indicators:**
+   - Clear focus rings on interactive elements
+   - Consistent focus styling
+   - Keyboard navigation support
+
+**Screen Reader Support:**
+
+1. **ARIA Enhancements:**
+   - Proper ARIA labels where needed
+   - Better semantic HTML
+   - Improved form labels
+
+---
+
+#### 9. Professional Polish Touches
+
+**Loading States:**
+
+1. **Better Loading Indicators:**
+   - Skeleton screens instead of spinners
+   - Smooth loading animations
+   - Progress indicators
+   - Better "empty state" designs
+
+**Empty States:**
+
+1. **Improved Empty State Design:**
+   - Friendly illustrations or icons
+   - Helpful messaging
+   - Call-to-action buttons
+   - Better visual design
+
+**Error States:**
+
+1. **Error Message Design:**
+   - Consistent error styling
+   - Helpful error messages
+   - Better visual indicators
+   - Actionable error recovery
+
+**Success States:**
+
+1. **Success Feedback:**
+   - Clear success indicators
+   - Smooth success animations
+   - Consistent success styling
+
+**Badges & Status Indicators:**
+
+1. **Enhanced Badge Design:**
+   - Better color coding
+   - Improved sizing
+   - Consistent styling
+   - Better contrast
+
+---
+
+#### 10. Specific Component Styling
+
+**Resource Cards:**
+
+1. **Resource Card Enhancements:**
+   - Better image aspect ratios
+   - Image overlays with text
+   - Rating display improvements
+   - Better category badges
+   - Improved "Book Now" button styling
+   - Hover effects showing more info
+
+**Booking Calendar:**
+
+1. **Calendar Styling:**
+   - Better FullCalendar theme integration
+   - Custom event colors
+   - Improved time slot styling
+   - Better selected state indicators
+   - Consistent with overall design
+
+**Admin Dashboard:**
+
+1. **Dashboard Improvements:**
+   - Better stat card design
+   - Improved chart styling (Chart.js theme)
+   - Better table presentation
+   - Improved action buttons
+   - Better data visualization
+
+**Forms:**
+
+1. **Form Styling:**
+   - Better input group styling
+   - Improved date/time pickers
+   - Better file upload areas
+   - Improved validation styling
+   - Better help text presentation
+
+---
+
+### Implementation Strategy
+
+#### Phase 1: Foundation (2-3 hours)
+
+1. **Setup CSS Variables:**
+   - Define color palette
+   - Define spacing scale
+   - Define typography scale
+   - Define shadow system
+
+2. **Base Typography:**
+   - Add custom font (if using web fonts)
+   - Define heading styles
+   - Define body text styles
+   - Set line-heights and spacing
+
+3. **Color Overrides:**
+   - Override Bootstrap primary colors
+   - Apply custom color scheme
+   - Test color contrast
+
+#### Phase 2: Components (4-6 hours)
+
+1. **Cards:**
+   - Enhanced card styling
+   - Better shadows and borders
+   - Improved hover effects
+   - Consistent spacing
+
+2. **Buttons:**
+   - Custom button styles
+   - Better hover states
+   - Consistent sizing
+   - Icon integration
+
+3. **Forms:**
+   - Input field styling
+   - Better focus states
+   - Error/success styling
+   - Consistent spacing
+
+4. **Navigation:**
+   - Navbar enhancements
+   - Sidebar improvements
+   - Better active states
+   - Mobile menu styling
+
+#### Phase 3: Layout & Spacing (2-3 hours)
+
+1. **Spacing System:**
+   - Apply consistent spacing
+   - Improve container widths
+   - Better section spacing
+   - Refine card spacing
+
+2. **Layout Refinements:**
+   - Better use of whitespace
+   - Improved grid layouts
+   - Better responsive behavior
+
+#### Phase 4: Polish & Details (3-4 hours)
+
+1. **Micro-interactions:**
+   - Add smooth transitions
+   - Improve hover effects
+   - Better loading states
+   - Success/error animations
+
+2. **Visual Hierarchy:**
+   - Apply shadow system
+   - Refine borders
+   - Better depth layers
+   - Improved contrast
+
+3. **Accessibility:**
+   - Improve focus states
+   - Test color contrast
+   - Add ARIA where needed
+   - Keyboard navigation
+
+#### Phase 5: Testing & Refinement (2-3 hours)
+
+1. **Cross-browser Testing:**
+   - Test in Chrome, Firefox, Safari, Edge
+   - Verify responsive behavior
+   - Test on mobile devices
+
+2. **Refinement:**
+   - Adjust spacing as needed
+   - Fine-tune colors
+   - Improve animations
+   - Polish details
+
+**Total Estimated Time: 13-19 hours**
+
+---
+
+### Recommended Tools & Resources
+
+**IU Brand Resources:**
+- **IU Style Guide**: `docs/context/AiDD/IU_Style_Guide.md` (included in project)
+- **IU Web Framework Documentation**: https://plus.college.indiana.edu/guidelines/style-guide/index.html
+- **IU Brand Guidelines**: Official IU brand standards and color specifications
+
+**Color Palette Tools:**
+- IU Style Guide (primary source for IU colors)
+- Coolors.co (for generating tints/shades of IU colors)
+- Adobe Color (for color wheel and contrast checking)
+- WebAIM Contrast Checker (for WCAG compliance with IU colors)
+
+**Typography Resources:**
+- **System Fonts**: Georgia (headings) and Arial (body) - no licensing needed, instant load
+- **Georgia Pro**: Requires licensing if embedding via @font-face
+- Type Scale (typography calculator for heading sizes)
+- IU Style Guide (font stack specifications)
+
+**Design Inspiration:**
+- IU official websites (for IU design patterns)
+- IU Web Framework examples
+- Bootstrap Examples (customized with IU colors)
+- Material Design Guidelines (adapted for IU colors)
+
+**CSS Frameworks:**
+- **Keep Bootstrap 5**: Customize heavily with IU colors and typography
+- Bootstrap CSS Variables: Override with IU color palette
+- Custom CSS: Implement IU-specific styling requirements
+
+---
+
+### Key Principles
+
+1. **Consistency:**
+   - Use design system approach
+   - Consistent spacing, colors, typography
+   - Reusable component styles
+
+2. **Progressive Enhancement:**
+   - Start with foundation
+   - Add enhancements incrementally
+   - Don't break existing functionality
+
+3. **Performance:**
+   - Minimize custom CSS size
+   - Use CSS variables for maintainability
+   - Optimize animations
+   - Consider critical CSS
+
+4. **Accessibility:**
+   - Maintain WCAG compliance
+   - Test with screen readers
+   - Ensure keyboard navigation
+   - Test color contrast
+
+5. **Maintainability:**
+   - Well-organized CSS structure
+   - Use CSS variables
+   - Comment complex styles
+   - Follow naming conventions
+
+---
+
+### Example CSS Structure (IU-Compliant)
+
+```css
+/* ============================================
+   Campus Resource Hub - IU Brand Compliant Styles
+   ============================================ */
+
+/* 1. CSS Variables (IU Colors) */
+:root {
+    /* IU Primary Colors */
+    --iu-crimson: #990000;
+    --iu-crimson-hover: #b30000;
+    --iu-cream: #EDEBEB;
+    --iu-white: #ffffff;
+    
+    /* IU Secondary Colors (choose one primary) */
+    --iu-gold: #F1BE48;
+    --iu-mint: #008264;
+    --iu-midnight: #006298;
+    
+    /* Neutral Grays */
+    --iu-gray-light: #f5f5f5;
+    --iu-gray-medium: #cccccc;
+    --iu-gray-dark: #666666;
+    --iu-text-primary: #333333;
+    --iu-text-secondary: #666666;
+    
+    /* Bootstrap Overrides */
+    --bs-primary: var(--iu-crimson);
+    --bs-primary-rgb: 153, 0, 0;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. Base Styles (IU Typography) */
+body {
+    font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
+    color: var(--iu-text-primary);
+    background-color: var(--iu-white); /* First section must be white */
+    line-height: 1.6;
+}
+
+/* 3. Typography (IU Font Stack) */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia Pro', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--iu-text-primary);
+}
+
+/* 4. Components (IU Colors) */
+.card {
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--iu-gray-medium);
+    background-color: var(--iu-white);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Primary Buttons - IU Crimson */
+.btn-primary {
+    background-color: var(--iu-crimson);
+    border-color: var(--iu-crimson);
+    color: var(--iu-white);
+}
+
+.btn-primary:hover {
+    background-color: var(--iu-crimson-hover);
+    border-color: var(--iu-crimson-hover);
+}
+
+/* 5. First Section Requirement */
+.first-section {
+    background-color: var(--iu-white);
+    color: var(--iu-text-primary);
+}
+
+/* 6. Utilities */
+/* Custom utility classes as needed */
+```
+
+---
+
+### Benefits of Professional Styling
+
+1. **User Experience:**
+   - More intuitive interface
+   - Better visual hierarchy
+   - Improved readability
+   - Professional appearance
+
+2. **Brand Perception:**
+   - More trustworthy
+   - More modern
+   - More polished
+   - Better first impression
+
+3. **Usability:**
+   - Clearer navigation
+   - Better form usability
+   - Improved feedback
+   - Enhanced accessibility
+
+4. **Maintainability:**
+   - Consistent design system
+   - Easier to update
+   - Better organized code
+   - Scalable styling
+
+---
+
+### Conclusion
+
+The Campus Resource Hub has a solid functional foundation with Bootstrap 5. By implementing the IU brand-compliant styling improvements outlined above, the site will:
+
+1. **Meet IU Brand Standards:**
+   - Use IU Crimson (#990000) as the dominant primary color
+   - Implement IU typography (Georgia Pro/Georgia for headings, Franklin Gothic/Arial for body)
+   - Follow IU accessibility requirements (white first section, WCAG AA compliance)
+   - Utilize IU secondary color palette appropriately
+
+2. **Maintain Functionality:**
+   - All improvements are styling-only (no functional changes)
+   - Can be implemented incrementally
+   - Low-risk, high-reward enhancement
+
+3. **Key Implementation Priorities:**
+   - **Critical**: Replace Bootstrap blue with IU Crimson
+   - **Critical**: Implement IU typography stack
+   - **Critical**: Ensure first section of all pages is white with text
+   - **Important**: Apply IU color palette consistently
+   - **Important**: Choose and implement one secondary color (recommend Gold or Midnight)
+
+4. **Benefits:**
+   - Official IU brand compliance
+   - Professional, university-appropriate appearance
+   - Better brand recognition and trust
+   - Accessibility compliance
+   - Consistent with other IU websites
+
+All improvements align with Indiana University's official brand guidelines and can be implemented without changing any underlying functionality, ensuring the site reflects the IU visual identity while maintaining all existing features.
+
+---

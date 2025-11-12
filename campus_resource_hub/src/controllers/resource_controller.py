@@ -162,6 +162,10 @@ def search():
     # Get all resources before sorting (for calculating stats)
     all_resources = resources.all()
     
+    # Eager load images for each resource
+    for resource in all_resources:
+        resource.images = ResourceImage.query.filter_by(resource_id=resource.id).order_by(ResourceImage.display_order).all()
+    
     # Apply sorting
     if sort_by == 'recent':
         resources = sorted(all_resources, key=lambda r: r.created_at, reverse=True)
@@ -214,15 +218,16 @@ def view(id):
     page = request.args.get('page', 1, type=int)
     
     # Check if the user has any active bookings for this resource
-    user_booking = None
+    user_bookings = []
     user_waitlist = None
     user_review = None
     if current_user.is_authenticated:
-        user_booking = Booking.query.filter_by(
+        # Get all active bookings for this user and resource (allows multiple bookings)
+        user_bookings = Booking.query.filter_by(
             user_id=current_user.id,
             resource_id=resource.id,
             status='active'
-        ).first()
+        ).order_by(Booking.start_date.asc()).all()
         user_waitlist = Waitlist.query.filter_by(
             user_id=current_user.id,
             resource_id=resource.id,
@@ -258,7 +263,7 @@ def view(id):
     
     return render_template('resources/view.html', 
                          resource=resource,
-                         user_booking=user_booking,
+                         user_bookings=user_bookings,
                          user_waitlist=user_waitlist,
                          user_review=user_review,
                          avg_rating=avg_rating,
@@ -367,9 +372,16 @@ def book(id):
         parent_booking_id = None
         
         from datetime import timedelta
+        import logging
+        
+        # Safety limit: prevent creating more than 365 bookings (1 year of daily bookings)
+        MAX_RECURRING_BOOKINGS = 365
+        iteration_count = 0
         
         # Use no_autoflush to prevent premature database locks during conflict checks
-        while True:
+        while iteration_count < MAX_RECURRING_BOOKINGS:
+            iteration_count += 1
+            
             # Calculate current end date based on duration
             current_end = current_start + booking_duration
             
@@ -418,6 +430,7 @@ def book(id):
                         db.session.commit()
                         flash(f'Created {len(bookings_created)} booking(s). Some occurrences were skipped due to conflicts or capacity.', 'warning')
                     except Exception as e:
+                        logging.error(f"Error committing bookings: {str(e)}")
                         db.session.rollback()
                         flash('An error occurred while creating the bookings. Please try again.', 'danger')
                         return render_template('resources/book.html', resource=resource, form=form)
@@ -446,26 +459,50 @@ def book(id):
             else:
                 break
         
-        # Commit all bookings at once
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            flash('An error occurred while creating the bookings. Please try again.', 'danger')
-            return render_template('resources/book.html', resource=resource, form=form)
+        # Safety check: if we hit the limit, warn the user
+        if iteration_count >= MAX_RECURRING_BOOKINGS:
+            logging.warning(f"Recurring booking creation hit safety limit of {MAX_RECURRING_BOOKINGS} iterations")
+            if bookings_created:
+                try:
+                    db.session.commit()
+                    flash(f'Created {len(bookings_created)} booking(s). Recurrence was limited to prevent excessive bookings.', 'warning')
+                except Exception as e:
+                    logging.error(f"Error committing bookings after limit: {str(e)}")
+                    db.session.rollback()
+                    flash('An error occurred while creating the bookings. Please try again.', 'danger')
+                    return render_template('resources/book.html', resource=resource, form=form)
+            else:
+                db.session.rollback()
+                flash('Unable to create recurring bookings. Please try a shorter recurrence period.', 'danger')
+                return render_template('resources/book.html', resource=resource, form=form)
         
-        # Create notifications
-        from ..utils.notifications import notify_booking_created, notify_recurring_series_created
-        
-        if len(bookings_created) > 1:
-            # Count skipped bookings (if any were skipped)
-            skipped_count = 0  # This would need to be tracked during creation
-            notify_recurring_series_created(bookings_created, skipped_count)
-            flash(f'Successfully created {len(bookings_created)} recurring bookings!', 'success')
+        # Commit all bookings at once (only if we have bookings and haven't already committed)
+        if bookings_created:
+            try:
+                db.session.commit()
+            except Exception as e:
+                logging.error(f"Error committing bookings: {str(e)}")
+                db.session.rollback()
+                flash('An error occurred while creating the bookings. Please try again.', 'danger')
+                return render_template('resources/book.html', resource=resource, form=form)
+            
+            # Create notifications
+            from ..utils.notifications import notify_booking_created, notify_recurring_series_created
+            
+            if len(bookings_created) > 1:
+                # Count skipped bookings (if any were skipped)
+                skipped_count = 0  # This would need to be tracked during creation
+                notify_recurring_series_created(bookings_created, skipped_count)
+                flash(f'Successfully created {len(bookings_created)} recurring bookings!', 'success')
+            else:
+                notify_booking_created(bookings_created[0])
+                flash('Booking request submitted successfully!', 'success')
+            return redirect(url_for('resources.view', id=id))
         else:
-            notify_booking_created(bookings_created[0])
-            flash('Booking request submitted successfully!', 'success')
-        return redirect(url_for('resources.view', id=id))
+            # This shouldn't happen, but handle it gracefully
+            db.session.rollback()
+            flash('No bookings were created. Please check your booking details and try again.', 'warning')
+            return render_template('resources/book.html', resource=resource, form=form)
     
     return render_template('resources/book.html', resource=resource, form=form)
 
@@ -516,8 +553,10 @@ def create():
     if form.validate_on_submit():
         resource = Resource(
             title=form.title.data,
+            name=form.title.data,  # Set name to title for backward compatibility with database schema
             description=form.description.data,
             category=form.category.data,
+            type=form.category.data,  # Set type to category for backward compatibility with database schema
             location=form.location.data,
             image_url=form.image_url.data,
             capacity=int(form.capacity.data) if form.capacity.data else None,

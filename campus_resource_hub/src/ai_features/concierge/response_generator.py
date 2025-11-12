@@ -40,12 +40,65 @@ class ResponseGenerator:
         # Build prompt
         prompt = self._build_prompt(query, doc_context, db_context, user_role)
         
+        # Log prompt length for debugging
+        import logging
+        prompt_length = len(prompt)
+        logging.info(f"Generated prompt length: {prompt_length} characters")
+        if prompt_length > 15000:
+            logging.warning(f"Prompt is very long ({prompt_length} chars), may cause issues")
+        
         # Generate LLM response
-        llm_response = self.llm_client.generate_response(prompt)
+        try:
+            llm_response = self.llm_client.generate_response(prompt, max_tokens=1000)
+        except ValueError as e:
+            # API key, configuration error, or rate limit error
+            import logging
+            error_msg = str(e)
+            logging.error(f"LLM error: {error_msg}", exc_info=True)
+            
+            # Check if it's a rate limit error
+            if "rate limit" in error_msg.lower() or "rate_limit" in error_msg.lower():
+                return {
+                    'text': 'I\'m currently experiencing high demand. Please wait a moment (about 20-30 seconds) and try again. The OpenAI API has rate limits to ensure fair usage.',
+                    'links': [],
+                    'booking_proposal': None,
+                    'sources': []
+                }
+            # Check if it's an API key error
+            elif "api key" in error_msg.lower() or "authentication" in error_msg.lower():
+                return {
+                    'text': f'Configuration error: {error_msg}. Please check that the OpenAI API key is properly configured.',
+                    'links': [],
+                    'booking_proposal': None,
+                    'sources': []
+                }
+            else:
+                return {
+                    'text': f'Configuration error: {error_msg}. Please try again later.',
+                    'links': [],
+                    'booking_proposal': None,
+                    'sources': []
+                }
+        except Exception as e:
+            import logging
+            logging.error(f"Error generating LLM response: {e}", exc_info=True)
+            import traceback
+            error_details = traceback.format_exc()
+            logging.error(f"Full traceback: {error_details}")
+            return {
+                'text': f'I encountered an error while processing your request: {str(e)}. Please try again later or contact support if the issue persists.',
+                'links': [],
+                'booking_proposal': None,
+                'sources': []
+            }
         
         if not llm_response:
+            import logging
+            logging.warning("LLM returned None/empty response. This could indicate an API error, rate limit, or network issue.")
+            # Try to get more information about why it failed
+            # The error should have been logged in llm_client.generate_response
             return {
-                'text': 'I apologize, but I\'m having trouble processing your request right now. Please try again later.',
+                'text': 'I apologize, but I\'m having trouble processing your request right now. The OpenAI API may be unavailable, rate-limited, or there was a network error. Please wait a moment and try again.',
                 'links': [],
                 'booking_proposal': None,
                 'sources': []

@@ -26,9 +26,19 @@ def admin_required(f):
     decorated_function.__name__ = f.__name__
     return decorated_function
 
+def staff_or_admin_required(f):
+    """Decorator to require staff or admin role."""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or (current_user.role != 'staff' and current_user.role != 'admin'):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
 def log_admin_action(action, target_table=None, details=None):
-    """Helper function to log admin actions."""
-    if current_user.is_authenticated and current_user.role == 'admin':
+    """Helper function to log admin and staff actions."""
+    if current_user.is_authenticated and (current_user.role == 'admin' or current_user.role == 'staff'):
         log = AdminLog(
             admin_id=current_user.id,
             action=action,
@@ -78,16 +88,16 @@ def save_uploaded_images(files, resource_id):
 
 @admin_bp.route('/')
 @login_required
-@admin_required
+@staff_or_admin_required
 def dashboard():
     """Admin dashboard with statistics."""
     stats = {
-        'total_users': User.query.count(),
+        'total_users': User.query.count() if current_user.role == 'admin' else None,
         'total_resources': Resource.query.count(),
         'total_bookings': Booking.query.count(),
         'active_bookings': Booking.query.filter_by(status='active').count(),
         'pending_bookings': Booking.query.filter_by(status='pending').count(),
-        'flagged_messages': Message.query.filter_by(is_flagged=True, is_hidden=False).count()
+        'flagged_messages': Message.query.filter_by(is_flagged=True, is_hidden=False).count() if current_user.role == 'admin' else None
     }
     return render_template('admin/dashboard.html', stats=stats)
 
@@ -190,7 +200,7 @@ def delete_user(id):
 # ========== RESOURCE MANAGEMENT ==========
 @admin_bp.route('/resources')
 @login_required
-@admin_required
+@staff_or_admin_required
 def resources():
     """List all resources."""
     resources_list = Resource.query.order_by(Resource.title).all()
@@ -198,7 +208,7 @@ def resources():
 
 @admin_bp.route('/resources/new', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def create_resource():
     """Create a new resource."""
     form = AdminResourceForm()
@@ -212,8 +222,10 @@ def create_resource():
     if form.validate_on_submit():
         resource = Resource(
             title=form.title.data,
+            name=form.title.data,  # Set name to title for backward compatibility with database schema
             description=form.description.data,
             category=form.category.data,
+            type=form.category.data,  # Set type to category for backward compatibility with database schema
             location=form.location.data,
             image_url=form.image_url.data,
             capacity=int(form.capacity.data) if form.capacity.data else None,
@@ -240,7 +252,7 @@ def create_resource():
 
 @admin_bp.route('/resources/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def edit_resource(id):
     """Edit a resource."""
     resource = Resource.query.get_or_404(id)
@@ -276,8 +288,10 @@ def edit_resource(id):
             owner_id_value = int(owner_id_value)
         
         resource.title = form.title.data
+        resource.name = form.title.data  # Update name to match title for backward compatibility
         resource.description = form.description.data
         resource.category = form.category.data
+        resource.type = form.category.data  # Update type to match category for backward compatibility
         resource.location = form.location.data
         resource.image_url = form.image_url.data
         resource.capacity = int(form.capacity.data) if form.capacity.data else None
@@ -302,7 +316,7 @@ def edit_resource(id):
 
 @admin_bp.route('/resources/<int:id>/delete', methods=['POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def delete_resource(id):
     """Delete a resource."""
     resource = Resource.query.get_or_404(id)
@@ -317,7 +331,7 @@ def delete_resource(id):
 # ========== BOOKING MANAGEMENT ==========
 @admin_bp.route('/bookings')
 @login_required
-@admin_required
+@staff_or_admin_required
 def bookings():
     """List all bookings."""
     # Use fresh query to ensure we get latest data
@@ -326,7 +340,7 @@ def bookings():
 
 @admin_bp.route('/bookings/new', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def create_booking():
     """Create a new booking."""
     form = AdminBookingForm()
@@ -359,7 +373,7 @@ def create_booking():
 
 @admin_bp.route('/bookings/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def edit_booking(id):
     """Edit a booking."""
     booking = Booking.query.get_or_404(id)
@@ -478,7 +492,7 @@ def edit_booking(id):
 
 @admin_bp.route('/bookings/<int:id>/delete', methods=['POST'])
 @login_required
-@admin_required
+@staff_or_admin_required
 def delete_booking(id):
     """Delete a booking."""
     booking = Booking.query.get_or_404(id)

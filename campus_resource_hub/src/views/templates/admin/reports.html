@@ -148,14 +148,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Chart.js configuration
+// Chart.js configuration - IU Brand Colors
 const chartColors = {
-    primary: 'rgba(13, 110, 253, 0.8)',
-    success: 'rgba(25, 135, 84, 0.8)',
-    danger: 'rgba(220, 53, 69, 0.8)',
-    warning: 'rgba(255, 193, 7, 0.8)',
-    info: 'rgba(13, 202, 240, 0.8)',
-    secondary: 'rgba(108, 117, 125, 0.8)'
+    primary: 'rgba(153, 0, 0, 0.8)',      // IU Crimson
+    success: 'rgba(25, 135, 84, 0.8)',     // Green (kept for success indicators)
+    danger: 'rgba(220, 53, 69, 0.8)',      // Red (kept for danger indicators)
+    warning: 'rgba(241, 190, 72, 0.8)',    // IU Gold
+    info: 'rgba(0, 98, 152, 0.8)',         // IU Midnight
+    secondary: 'rgba(108, 117, 125, 0.8)'  // Gray
 };
 
 // 1. Active Resources by Status - Bar Chart
@@ -293,12 +293,12 @@ new Chart(ratingsVsBookingsCtx, {
 
 // 6. Bookings per User Role - Pie Chart
 const bookingsByRoleCtx = document.getElementById('bookingsByRoleChart').getContext('2d');
-// Map roles to specific colors: admin=red, staff=green, student=blue
+// Map roles to specific colors: admin=red, staff=green, student=IU Crimson
 const roleLabels = {{ bookings_by_role_data.roles | tojson }};
 const roleColors = roleLabels.map(role => {
     if (role === 'admin') return chartColors.danger; // red
     if (role === 'staff') return chartColors.success; // green
-    if (role === 'student') return chartColors.primary; // blue
+    if (role === 'student') return chartColors.primary; // IU Crimson
     return chartColors.secondary; // default for other roles
 });
 new Chart(bookingsByRoleCtx, {
