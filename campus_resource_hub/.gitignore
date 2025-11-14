@@ -58,3 +58,27 @@ Thumbs.db
 **/*api*key*
 **/*secret*
 
+# Temporary fix/utility scripts (not needed for website functionality)
+add_columns.py
+check_schema.py
+check_users.py
+fix_database.py
+fix_database_subscriptions.py
+fix_resource_type.py
+reset_user_password.py
+run_tests_and_log.py
+generate_test_docs.py
+
+# Temporary troubleshooting documents
+LOGIN_FIX.md
+
+# Non-required documentation (analysis/comparison reports)
+docs/context/AiDD/ERD_Diagram.mmd
+docs/context/AiDD/REQUIREMENTS_COMPLIANCE_REPORT.md
+docs/context/AiDD/tech_stack_requirements_comparison.md
+docs/context/AiDD/development_options.md
+docs/context/AiDD/IU_Styling_Scope_Analysis.md
+docs/context/AiDD/IU_Style_Guide.md
+docs/context/AiDD/project_summary.md
+tests/TEST_REQUIREMENTS_COMPLIANCE.md
+

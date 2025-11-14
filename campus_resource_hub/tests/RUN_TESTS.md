@@ -66,12 +66,12 @@ python -m pytest tests/ --cov=src --cov-report=html --cov-report=term --ignore=t
 
 ## Test Results
 
-Test results are saved to:
-- `tests/test_results.txt` - Detailed pytest output
-- `TEST_RESULTS.md` - Summary document
+Test results can be saved to:
+- `tests/test_results.txt` - Detailed pytest output (redirect output manually)
+- `TEST_RESULTS.md` - Summary document (if generated)
 
-To regenerate test documentation:
+To save test output to a file:
 ```powershell
-python generate_test_docs.py
+python -m pytest tests/ -v --ignore=tests/ai_eval > tests/test_results.txt 2>&1
 ```
 

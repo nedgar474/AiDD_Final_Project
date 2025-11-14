@@ -209,9 +209,9 @@ def search():
 def view(id):
     resource = Resource.query.get_or_404(id)
     
-    # Check if resource is published - if not, only admins can view it
+    # Check if resource is published - if not, only staff and admins can view it
     if resource.status != 'published':
-        if not current_user.is_authenticated or current_user.role != 'admin':
+        if not current_user.is_authenticated or (current_user.role != 'admin' and current_user.role != 'staff'):
             abort(404)
     
     # Get page number for reviews pagination
@@ -580,6 +580,7 @@ def create():
         
         db.session.commit()
         flash('Resource created successfully!', 'success')
+        # Redirect to the resource view page (staff and admin can view draft resources)
         return redirect(url_for('resources.view', id=resource.id))
     
     return render_template('resources/create.html', form=form)
