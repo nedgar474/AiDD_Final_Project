@@ -330,6 +330,161 @@ Summary:
 
 ## End of OpenAI Prompts
 
+---
+
+## IU Brand Styling Implementation Prompts
+
+### Main IU Styling Implementation Prompt
+
+**Purpose**: Implement Indiana University (IU) brand guidelines for the Campus Resource Hub website, ensuring compliance with IU visual identity standards while maintaining all existing functionality.
+
+**Context**: The Campus Resource Hub needs to reflect Indiana University's official brand guidelines, including colors, typography, and design standards as specified in the IU Style Guide.
+
+**Location**: Implementation spans multiple files, primarily `src/static/css/style.css` with minimal template updates.
+
+**IU Brand Guidelines Summary**:
+
+**Colors:**
+- **Primary**: IU Crimson (#990000) - MUST be dominant in all communication pieces
+- **Primary/Alternate**: IU Cream (#EDEBEB) or white for backgrounds
+- **Secondary Options**: 
+  - Gold (#F1BE48) - Supporting accent color
+  - Mint/Dark Mint (#008264) - Part of broader secondary palette
+  - Midnight/Dark Midnight (#006298) - Secondary "cool" accent tone
+- **Usage Rule**: Choose ONE secondary color and its tints/shades; avoid multiple secondaries simultaneously
+- **Neutral Grays**: Light grays, neutrals, and white for backgrounds and whitespace
+- **First Section Requirement**: First section of every page MUST be white with text for accessibility
+
+**Typography:**
+- **Headings (h1-h6)**: 
+  - Preferred: 'Georgia Pro' (if licensed)
+  - Fallback: Georgia (system font, wide availability)
+  - Final fallback: Any serif font
+- **Body Text**: 
+  - Franklin Gothic or 'Franklin Gothic Medium'
+  - Fallback: Arial
+  - Final fallback: Generic sans-serif
+- **Note**: When embedding custom fonts via @font-face, ensure licensing compliance
+
+**Implementation Requirements**:
+
+1. **CSS Variables Setup**:
+   ```css
+   :root {
+       /* IU Primary Colors */
+       --iu-crimson: #990000;
+       --iu-crimson-hover: #b30000;
+       --iu-cream: #EDEBEB;
+       --iu-white: #ffffff;
+       
+       /* IU Secondary Colors (Gold selected as primary secondary) */
+       --iu-gold: #F1BE48;
+       --iu-mint: #008264;
+       --iu-midnight: #006298;
+       
+       /* Neutral Grays */
+       --iu-gray-light: #f5f5f5;
+       --iu-gray-medium: #cccccc;
+       --iu-gray-dark: #666666;
+       --iu-text-primary: #333333;
+       --iu-text-secondary: #666666;
+       
+       /* Bootstrap Overrides - IU Crimson as Primary */
+       --bs-primary: var(--iu-crimson);
+       --bs-primary-rgb: 153, 0, 0;
+   }
+   ```
+
+2. **Typography Implementation**:
+   ```css
+   /* Headings - Serif (Georgia Pro/Georgia) */
+   h1, h2, h3, h4, h5, h6 {
+       font-family: 'Georgia Pro', Georgia, serif;
+       font-weight: 600;
+       line-height: 1.2;
+   }
+   
+   /* Body Text - Sans-serif (Franklin Gothic/Arial) */
+   body {
+       font-family: Franklin Gothic, 'Franklin Gothic Medium', Arial, sans-serif;
+   }
+   ```
+
+3. **Component Overrides**:
+   - Buttons: Primary buttons use IU Crimson (#990000)
+   - Cards: White or IU Cream backgrounds
+   - Navbar: IU Crimson background
+   - Sidebar: Active link color changed from Bootstrap blue to IU Crimson
+   - Forms: IU-compliant styling
+   - Badges: Use IU color palette
+   - Modals: IU-compliant styling
+
+4. **Accessibility Requirements**:
+   - First section of every page MUST be white background with text
+   - Ensure proper contrast ratios (WCAG compliant)
+   - Focus states clearly visible
+   - Keyboard navigation support
+
+**Key Principles**:
+- **Crimson Dominance**: IU Crimson must be the most prominent color
+- **Consistency**: Use design system approach with consistent spacing, colors, typography
+- **Progressive Enhancement**: Start with foundation, add enhancements incrementally
+- **No Functionality Changes**: Maintain all existing functionality while updating styling
+- **Performance**: Minimize custom CSS size, use CSS variables for maintainability
+
+**Files to Modify**:
+- **Primary**: `src/static/css/style.css` (~80-85% of changes)
+- **Templates**: Minimal updates to ~8-12 template files (~10-15% of changes)
+- **JavaScript**: Chart.js color definitions in `admin/reports.html` (~5% of changes)
+
+**Implementation Steps**:
+1. Add IU CSS variables to `style.css`
+2. Implement IU typography (headings and body text)
+3. Override Bootstrap primary color to IU Crimson
+4. Update component styles (buttons, cards, navbar, sidebar, forms, badges, modals)
+5. Ensure first section white background requirement
+6. Update Chart.js colors in admin reports
+7. Test accessibility and contrast
+8. Verify all functionality still works
+
+**Testing Requirements**:
+- Verify IU Crimson is dominant color throughout site
+- Check typography renders correctly (Georgia for headings, Franklin Gothic/Arial for body)
+- Ensure first section of all pages is white with text
+- Test accessibility (contrast, focus states, keyboard navigation)
+- Verify all existing functionality works
+- Test responsive design with IU styling
+
+**Resources**:
+- IU Style Guide: `docs/context/AiDD/IU_Style_Guide.md`
+- IU Web Framework Documentation: https://plus.college.indiana.edu/guidelines/style-guide/index.html
+- IU Styling Scope Analysis: `docs/context/AiDD/IU_Styling_Scope_Analysis.md`
+
+---
+
+### IU Styling Component-Specific Prompts
+
+#### CSS Variables Prompt
+**Task**: Create CSS custom properties (variables) for IU brand colors, including primary (IU Crimson), secondary colors (Gold, Mint, Midnight), neutral grays, and Bootstrap overrides. Ensure IU Crimson is set as the Bootstrap primary color.
+
+#### Typography Prompt
+**Task**: Implement IU typography standards: Georgia Pro/Georgia for headings (h1-h6) and Franklin Gothic/Arial for body text. Ensure proper font fallbacks and maintain readability.
+
+#### Component Styling Prompt
+**Task**: Update all Bootstrap components (buttons, cards, navbar, sidebar, forms, badges, modals) to use IU color palette. Ensure IU Crimson is the dominant color, and components maintain accessibility standards.
+
+#### Accessibility Prompt
+**Task**: Ensure all styling changes maintain WCAG compliance, including proper contrast ratios, visible focus states, and white background for first section of every page as required by IU guidelines.
+
+#### Chart.js Color Update Prompt
+**Task**: Update Chart.js color definitions in admin reports to use IU color palette (IU Crimson, Gold, Mint, Midnight) instead of default Bootstrap colors.
+
+---
+
+## End of IU Brand Styling Prompts
+
+---
+
 You are an expert full-stack Flask developer setting up the **Campus Resource Hub** project for the AiDD 2025 Capstone.  
 Generate a **production-ready, database-integrated Flask scaffold** with migrations and sample seed data.
 

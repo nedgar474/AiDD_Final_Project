@@ -3,3 +3,12 @@ AI has proven to be a powerful tool for developers. I found that it made creatin
 Eventually the site became more stable as development proceeded and cursor was able to add new features and change functionality without causing as many errors. This may have been helped by having the AI generate reports on requirements compliance, style guides,testing logs and development options which likely served as useful context for the AI to draw on in its work.
 
 Late in the project, before demoing with my team, the AI managed to erase the database with all the site data. Luckily, we had just finished updating the seed data to contain images and everything was back up shortly. Based on this experience I will be making manual backups just to be sure this doesn't affect our work again.
+
+Reflection Prompts
+1. AI tools made it easier to implement and test new features and made bug fixing much faster and easier. It made it very convenient to make changes and push more aggressively for features.
+
+2. The AI needed to be watched closely to make sure it was actually creating useful output. Using Claude with this site, the model tended to "fix" bugs with other bugs and was essentially lost in its own code. Cursor was more reliable but still dangerous. 30 minutes before our team demo, the AI managed to wipe the database clean of all records. Thankfully, I had just updated the seed data functions to include images (This may have had something to do with the deletion) so disaster was averted. It was also necessary to remind the AI not to code, but instead perform analysis and provide options.
+
+3. Using AI with PHI or PII in a database could be very dangerous. They can be unpredicatble when dealing with databases and in our case the ai had no idea at all that the database had been cleared of all its records, let alone that it was responsible. You can code quickly bu you could also get into multimillion dollar trouble just as quickly so in some circumstances AI use should be limited and strictly monitored.
+
+4. These tools will likely futher reduce time to market. They may also create a lot more tech debt. This in combinination with shorter development and deployment times with a lower barrier to entry increase the competitive pressure of the market and result in shorter product life spans. Business technologists and Product managers will likely have to spend more effort trying to find business niches for new products and be prepared to deal with a more rapidly evolving market. Things will likely be more fast paced in 5 years than now.
