@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Waitlists{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Waitlist Management</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Resource</th>
+                            <th>Requested Start</th>
+                            <th>Requested End</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for waitlist in waitlists %}
+                        <tr>
+                            <td>{{ waitlist.id }}</td>
+                            <td>{{ waitlist.user.username if waitlist.user else waitlist.user_id }}</td>
+                            <td>{{ waitlist.resource.title if waitlist.resource else waitlist.resource_id }}</td>
+                            <td>{{ waitlist.requested_start_date|datetime }}</td>
+                            <td>{{ waitlist.requested_end_date|datetime }}</td>
+                            <td>
+                                {% if waitlist.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif waitlist.status == 'notified' %}
+                                    <span class="badge bg-info">Notified</span>
+                                {% elif waitlist.status == 'cancelled' %}
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ waitlist.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ waitlist.created_at|datetime }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.edit_waitlist', id=waitlist.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteWaitlistModal{{ waitlist.id }}">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">No waitlist entries found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary mt-3">Back to Dashboard</a>
+</div>
+
+<!-- Delete Waitlist Modals -->
+{% for waitlist in waitlists %}
+<div class="modal fade" id="deleteWaitlistModal{{ waitlist.id }}" tabindex="-1" aria-labelledby="deleteWaitlistModalLabel{{ waitlist.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteWaitlistModalLabel{{ waitlist.id }}">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Waitlist Entry
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-trash-alt fa-3x text-danger"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-2">Are you sure you want to delete this waitlist entry?</h6>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Waitlist ID:</strong> {{ waitlist.id }}</p>
+                                <p class="mb-1"><strong>User:</strong> {{ waitlist.user.username if waitlist.user else waitlist.user_id }}</p>
+                                <p class="mb-1"><strong>Resource:</strong> {{ waitlist.resource.title if waitlist.resource else waitlist.resource_id }}</p>
+                                <p class="mb-1"><strong>Requested Start:</strong> {{ waitlist.requested_start_date|datetime }}</p>
+                                <p class="mb-1"><strong>Requested End:</strong> {{ waitlist.requested_end_date|datetime }}</p>
+                                <p class="mb-0"><strong>Status:</strong> 
+                                    {% if waitlist.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif waitlist.status == 'notified' %}
+                                        <span class="badge bg-info">Notified</span>
+                                    {% elif waitlist.status == 'cancelled' %}
+                                        <span class="badge bg-secondary">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ waitlist.status }}</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger mb-0">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>Warning:</strong> This action cannot be undone. The waitlist entry will be permanently deleted.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <form method="POST" action="{{ url_for('admin.delete_waitlist', id=waitlist.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Yes, Delete Waitlist Entry
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+

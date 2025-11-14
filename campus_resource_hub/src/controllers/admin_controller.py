@@ -11,7 +11,8 @@ from ..models.message import Message
 from ..models.admin_log import AdminLog
 from ..models.review import Review
 from ..models.resource_image import ResourceImage
-from ..forms import AdminUserForm, AdminResourceForm, AdminBookingForm
+from ..models.waitlist import Waitlist
+from ..forms import AdminUserForm, AdminResourceForm, AdminBookingForm, AdminWaitlistForm
 from ..extensions import db, bcrypt
 from sqlalchemy import func, and_
 
@@ -908,3 +909,88 @@ def delete_review(id):
     log_admin_action('Delete review', 'reviews', f'Deleted review (ID: {review_id}) for resource ID: {resource_id}')
     flash('Review deleted successfully.', 'success')
     return redirect(url_for('admin.reviews'))
+
+# Waitlist Management Routes
+@admin_bp.route('/waitlists')
+@login_required
+@staff_or_admin_required
+def waitlists():
+    """List all waitlist entries."""
+    waitlist_entries = Waitlist.query.order_by(Waitlist.created_at.desc()).all()
+    return render_template('admin/waitlists.html', waitlists=waitlist_entries)
+
+@admin_bp.route('/waitlists/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@staff_or_admin_required
+def edit_waitlist(id):
+    """Edit a waitlist entry."""
+    waitlist = Waitlist.query.get_or_404(id)
+    form = AdminWaitlistForm()
+    
+    # Populate dropdown choices FIRST (before setting data)
+    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.order_by(User.username).all()]
+    form.resource_id.choices = [(r.id, f"{r.title} - {r.category}") for r in Resource.query.order_by(Resource.title).all()]
+    
+    if form.validate_on_submit():
+        # Form submitted and validated - update the waitlist
+        if form.parsed_end_date <= form.parsed_start_date:
+            flash('End date must be after start date.', 'danger')
+            # Re-populate form data for display
+            if waitlist.requested_start_date:
+                form.start_date.data = waitlist.requested_start_date.strftime('%Y-%m-%dT%H:%M')
+            if waitlist.requested_end_date:
+                form.end_date.data = waitlist.requested_end_date.strftime('%Y-%m-%dT%H:%M')
+            form.user_id.data = waitlist.user_id
+            form.resource_id.data = waitlist.resource_id
+            form.status.data = waitlist.status
+            form.notes.data = waitlist.notes
+            return render_template('admin/waitlist_form.html', form=form, title='Edit Waitlist', waitlist=waitlist)
+        
+        # Store old status for comparison
+        old_status = waitlist.status
+        
+        # Update waitlist fields
+        waitlist.user_id = form.user_id.data
+        waitlist.resource_id = form.resource_id.data
+        waitlist.requested_start_date = form.parsed_start_date
+        waitlist.requested_end_date = form.parsed_end_date
+        waitlist.status = form.status.data
+        waitlist.notes = form.notes.data
+        
+        # Update notified_at if status changed to 'notified'
+        if form.status.data == 'notified' and old_status != 'notified':
+            waitlist.notified_at = datetime.utcnow()
+        elif form.status.data != 'notified':
+            waitlist.notified_at = None
+        
+        db.session.commit()
+        log_admin_action('Edit waitlist', 'waitlist', f'Edited waitlist (ID: {waitlist.id}) for user ID: {waitlist.user_id}, resource ID: {waitlist.resource_id}, status: {old_status} -> {waitlist.status}')
+        flash('Waitlist entry updated successfully.', 'success')
+        return redirect(url_for('admin.waitlists'))
+    
+    # GET request or validation failed - populate form with existing data
+    if waitlist.requested_start_date:
+        form.start_date.data = waitlist.requested_start_date.strftime('%Y-%m-%dT%H:%M')
+    if waitlist.requested_end_date:
+        form.end_date.data = waitlist.requested_end_date.strftime('%Y-%m-%dT%H:%M')
+    form.user_id.data = waitlist.user_id
+    form.resource_id.data = waitlist.resource_id
+    form.status.data = waitlist.status
+    form.notes.data = waitlist.notes
+    
+    return render_template('admin/waitlist_form.html', form=form, title='Edit Waitlist', waitlist=waitlist)
+
+@admin_bp.route('/waitlists/<int:id>/delete', methods=['POST'])
+@login_required
+@staff_or_admin_required
+def delete_waitlist(id):
+    """Delete a waitlist entry."""
+    waitlist = Waitlist.query.get_or_404(id)
+    waitlist_id = waitlist.id
+    user_id = waitlist.user_id
+    resource_id = waitlist.resource_id
+    db.session.delete(waitlist)
+    db.session.commit()
+    log_admin_action('Delete waitlist', 'waitlist', f'Deleted waitlist (ID: {waitlist_id}) for user ID: {user_id}, resource ID: {resource_id}')
+    flash('Waitlist entry deleted successfully.', 'success')
+    return redirect(url_for('admin.waitlists'))

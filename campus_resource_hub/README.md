@@ -208,7 +208,61 @@ The project implements **Model Context Protocol (MCP)** to provide a safer, stru
 
 The AI Concierge automatically uses MCP when available, ensuring secure, structured database access. See `.prompt/dev_notes.md` for detailed implementation notes.
 
-Ethical considerations were paramount: all AI-generated code and documentation was reviewed, tested, and validated before inclusion. The project maintains transparency about AI usage as part of academic integrity, with comprehensive documentation of prompts, tools used, and how AI influenced design decisions.
+### Ethical Considerations & AI Usage Transparency
+
+**Ethical AI Development Practices:**
+
+The Campus Resource Hub project adheres to ethical AI development principles throughout both the development process and application functionality:
+
+1. **Code Review & Validation**
+   - All AI-generated code and documentation was reviewed, tested, and validated before inclusion
+   - No AI-generated code was used without human verification and testing
+   - All AI-authored code is marked with attribution comments (`# AI Contribution: ...`)
+
+2. **Academic Integrity & Transparency**
+   - Comprehensive documentation of all AI interactions in `.prompt/dev_notes.md`
+   - Detailed logging of prompts, tools used, and AI-influenced design decisions
+   - Full transparency about AI usage as part of academic integrity requirements
+   - All AI tools and their contributions are explicitly documented
+
+3. **Data Privacy & Security**
+   - AI Concierge uses read-only database access via MCP (Model Context Protocol)
+   - Role-based access control ensures users only see information appropriate to their role
+   - No user data is sent to external AI services beyond what's necessary for query processing
+   - OpenAI API usage is limited to the Resource Concierge feature only
+
+4. **Bias Mitigation**
+   - AI responses are grounded in actual database data and project documentation
+   - The RAG approach prevents AI from fabricating information
+   - Context Pack ensures AI responses align with project requirements and user needs
+   - All AI-generated content is validated against project specifications
+
+5. **User Safety**
+   - AI Concierge provides helpful guidance but never executes actions on behalf of users
+   - All booking and resource management actions require explicit user confirmation
+   - Error handling prevents AI from causing system failures or data corruption
+   - Rate limiting and caching reduce API costs and prevent abuse
+
+6. **Documentation & Accountability**
+   - All AI interactions are logged in `.prompt/dev_notes.md`
+   - High-impact prompts and responses are documented in `.prompt/golden_prompts.md`
+   - Clear attribution of AI contributions throughout the codebase
+   - Regular review of AI-generated code to ensure quality and correctness
+
+**AI Tools Used:**
+- **Cursor AI**: Primary development assistant for code generation, refactoring, and debugging
+- **GitHub Copilot**: Code completion and suggestion assistance
+- **OpenAI GPT-4o-mini**: Resource Concierge chatbot functionality
+
+**AI Contribution Scope:**
+- Code generation and scaffolding
+- Documentation writing and editing
+- Test case generation
+- Bug diagnosis and fixes
+- Database migration assistance
+- UI/UX improvements
+
+All AI contributions were reviewed, tested, and validated by the development team before integration.
 
 ### README Requirement
 

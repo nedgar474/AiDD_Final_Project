@@ -37,8 +37,10 @@ The Campus Resource Hub is a full-stack web application that enables university 
 **AI Features**:
 - OpenAI GPT-4o-mini for Resource Concierge
 - Retrieval-Augmented Generation (RAG) approach
+- Model Context Protocol (MCP) integration for secure database access
 - Document context from `/docs/context/` markdown files
-- Database context via Data Access Layer
+- Database context via Data Access Layer or MCP
+- Rate limit handling and caching for API efficiency
 
 ### Project Structure
 
@@ -162,8 +164,16 @@ See `database_schema.md` for complete schema documentation.
 - **Restrictions**: Suspended students cannot book resources or send messages
 
 ### Staff Role
-- **Can**: All student permissions, plus create/edit resources, view all resources (including drafts)
-- **Cannot**: Access admin dashboard, manage users, moderate content
+- **Can**: All student permissions, plus:
+  - Create/edit resources
+  - View all resources (including drafts)
+  - Access limited administrative dashboard (resource and booking management only)
+  - Manage resources and bookings through admin interface
+- **Cannot**: 
+  - Manage users or user accounts
+  - Moderate messages or reviews
+  - View admin logs or analytics reports
+  - Access full admin dashboard features
 
 ### Admin Role
 - **Can**: All staff permissions, plus:
@@ -364,17 +374,27 @@ See `database_schema.md` for complete schema documentation.
 - Multi-step, comparative, and temporal query support
 - Privacy protection (never reveals other users' data)
 - Chatbot UI in lower right corner with full chat history
+- Concise, readable responses without technical jargon
+- Rate limit handling with user-friendly error messages
+- Health check caching to reduce API calls
 
 **Implementation**:
 - Retrieval-Augmented Generation (RAG) approach
 - Document context from `/docs/context/` markdown files
-- Database context via Data Access Layer
+- Database context via Data Access Layer or Model Context Protocol (MCP)
+- **Model Context Protocol (MCP) Integration**:
+  - Read-only, secure database access for AI agents
+  - Role-based filtering enforced at MCP level
+  - Automatic fallback to direct DAL if MCP unavailable
+  - Environment-configurable (USE_MCP variable)
+  - Structured query interface preventing SQL injection
 - Smart document prioritization and filtering
 - Context summarization for long contexts
+- Improved prompt engineering for concise, actionable responses
 
 **Routes**:
 - `/concierge/query` - Process user query (POST)
-- `/concierge/health` - Check AI service availability (GET)
+- `/concierge/health` - Check AI service availability (GET, cached)
 
 ---
 
@@ -383,7 +403,11 @@ See `database_schema.md` for complete schema documentation.
 ### 1. Waitlist System
 - Join waitlist when resource unavailable or at capacity
 - Automatic notifications when resource becomes available
-- Waitlist entry management (view, cancel)
+- Waitlist entry management (view details, cancel)
+- **Auto-cancellation**: Expired waitlist entries automatically cancelled when requested time passes
+- **Waitlist Details Page**: Dedicated page showing full waitlist entry information
+- **Date Pre-population**: Start/end dates auto-populated from booking page when joining waitlist
+- **Context-aware Navigation**: Cancel redirects to resource page when cancelled from details page
 
 ### 2. Calendar Integration
 - iCal export for personal bookings
@@ -399,15 +423,20 @@ See `database_schema.md` for complete schema documentation.
 
 ### 4. Image Management
 - Multiple images per resource
-- Image carousel with auto-advance (15 seconds)
-- Navigation arrows and dot indicators
+- Image carousel with navigation arrows and controls
+- Display on home page and resource search pages
 - Secure file upload with path traversal protection
+- Image display order management
+- Fallback to placeholder when no images available
 
 ### 5. Recurrence Support
 - Daily, weekly, monthly recurrence options
 - Recurrence end date specification
 - Conflict detection per occurrence
 - Linked booking series via `parent_booking_id`
+- **Series Display**: Recurring bookings displayed as single entry with instance count
+- **Series Cancellation**: Cancelling any booking in a series cancels the entire series
+- **Safeguards**: Maximum limit (365 instances) and iteration protection to prevent infinite loops
 
 ---
 
@@ -440,6 +469,17 @@ See `database_schema.md` for complete schema documentation.
 - Role-based data filtering
 - Admin data removal capabilities
 - User control over own data (reviews, bookings, messages)
+- AI Concierge uses read-only database access (MCP)
+- No user data sent to external AI services beyond query processing
+
+### Ethical AI Development
+- All AI-generated code reviewed, tested, and validated
+- Comprehensive documentation of AI interactions in `.prompt/dev_notes.md`
+- Full transparency about AI usage for academic integrity
+- AI-authored code marked with attribution comments
+- Bias mitigation through grounded responses (RAG approach)
+- User safety: AI provides guidance but never executes actions
+- Rate limiting and caching to reduce API costs and prevent abuse
 
 ---
 
@@ -475,10 +515,11 @@ See `database_schema.md` for complete schema documentation.
 ### Message Workflow
 1. User views resource or profile
 2. User clicks "Message Owner" or navigates to compose
-3. User writes message and sends
-4. Recipient receives notification
-5. Recipient views message in inbox
-6. If flagged: Admin can moderate message
+3. **Reply Feature**: When replying, recipient and subject fields auto-populated with "Re: " prefix
+4. User writes message and sends
+5. Recipient receives notification
+6. Recipient views message in inbox
+7. If flagged: Admin can moderate message
 
 ---
 
@@ -502,6 +543,20 @@ See `database_schema.md` for complete schema documentation.
 - Recurrence Support (100%)
 - Personal Calendar Page (100%)
 - iCal Subscription Links (100%)
+
+### ✅ Recent Enhancements (2025)
+- **Staff Admin Access**: Staff members can access limited admin dashboard for resource and booking management
+- **MCP Integration**: Model Context Protocol implemented for secure AI database access
+- **Waitlist Improvements**: Auto-cancellation, details page, date pre-population
+- **Recurring Booking UX**: Series displayed as single entry, series-wide cancellation
+- **Image Carousels**: Navigation controls on home and search pages
+- **Message Reply**: Auto-populated recipient and subject fields
+- **UI Styling**: IU brand guidelines implemented (crimson, gold, mint colors)
+- **Banner Image**: Site-wide banner above navbar
+- **Login Improvements**: Enhanced error handling and debugging
+- **Seed Data**: Updated to include ResourceImage records with proper associations
+- **Security Tests**: Comprehensive SQL injection and XSS protection tests
+- **Docker Support**: Dockerfile, docker-compose.yml, and deployment documentation
 
 ### ⚠️ Partially Implemented
 - Reviews not restricted to completed bookings (users can review any resource)
@@ -538,8 +593,11 @@ See `database_schema.md` for complete schema documentation.
 ### AI Integration
 - **OpenAI GPT-4o-mini**: Cloud-based LLM for Resource Concierge
 - **RAG Approach**: Combines document and database context
+- **Model Context Protocol (MCP)**: Secure, read-only database access for AI agents
 - **Privacy-First**: Role-based filtering, no user data exposure
 - **Context-Aware**: Smart document prioritization and filtering
+- **Rate Limit Management**: Caching and user-friendly error handling
+- **Ethical Practices**: Code review, transparency, bias mitigation, user safety
 
 ---
 
@@ -557,10 +615,14 @@ See `database_schema.md` for complete schema documentation.
 - Commit history tracks feature development
 
 ### Testing
-- pytest framework configured
-- Unit tests for business logic
-- AI evaluation tests for code consistency
-- Test structure in place for expansion
+- **pytest framework** configured with comprehensive test suite
+- **Unit Tests**: Business logic, booking conflict detection, status transitions
+- **Data Access Layer Tests**: CRUD operations independently tested
+- **Integration Tests**: Auth flow, booking workflow, resource management
+- **Security Tests**: SQL injection protection, XSS prevention, parameterized queries
+- **AI Evaluation Tests**: Code consistency and pattern validation
+- **Test Fixtures**: Properly configured to prevent DetachedInstanceError
+- **Test Documentation**: Automated test result generation and coverage reports
 
 ### Documentation
 - Comprehensive database schema documentation
@@ -583,7 +645,12 @@ See `database_schema.md` for complete schema documentation.
 - Environment variable configuration
 - Static file serving optimization
 - Database migration strategy
-- Docker deployment option analyzed
+- **Docker Support**: 
+  - Dockerfile for containerized deployment
+  - docker-compose.yml for multi-container setup
+  - Automatic database migrations on container start
+  - Health checks configured
+  - Production-ready configuration
 
 ---
 
@@ -635,7 +702,36 @@ See `database_schema.md` for complete schema documentation.
 
 ---
 
+## Recent Updates & Improvements
+
+### UI/UX Enhancements
+- **IU Brand Styling**: Implemented Indiana University brand guidelines with crimson, gold, and mint color palette
+- **Banner Image**: Site-wide banner above navbar for visual branding
+- **Image Carousels**: Enhanced resource display with navigation controls on home and search pages
+- **Sidebar Positioning**: Fixed overlap issues with proper z-index and padding adjustments
+- **Delete Modals**: Styled Bootstrap modals for booking deletion with CSRF protection
+
+### Feature Improvements
+- **Staff Admin Access**: Staff members can now manage resources and bookings through limited admin dashboard
+- **Waitlist System**: Auto-cancellation of expired entries, dedicated details page, date pre-population
+- **Recurring Bookings**: Improved UX with series display and series-wide cancellation
+- **Message Replies**: Auto-populated recipient and subject fields for better user experience
+- **AI Concierge**: More concise, readable responses without technical jargon
+
+### Technical Improvements
+- **MCP Integration**: Model Context Protocol for secure AI database access
+- **Security Testing**: Comprehensive tests for SQL injection and XSS protection
+- **Docker Support**: Full containerization with Dockerfile and docker-compose.yml
+- **Test Infrastructure**: Improved fixtures, automated documentation, coverage reports
+- **Error Handling**: Enhanced login error messages, rate limit handling, booking safeguards
+
+### Documentation
+- **README Updates**: Comprehensive AI integration, ethical considerations, and technical overview
+- **ERD Diagram**: Full Mermaid ERD with complete attribute definitions
+- **PRD**: Product Requirements Document with stakeholders and success metrics
+- **Test Documentation**: Automated test result generation and compliance reports
+
 ## Conclusion
 
-The Campus Resource Hub is a production-ready, full-featured web application that successfully implements all core requirements and multiple advanced features. The system demonstrates professional software development practices, comprehensive security measures, and innovative AI integration. The application is well-structured, documented, and ready for deployment or further enhancement.
+The Campus Resource Hub is a production-ready, full-featured web application that successfully implements all core requirements and multiple advanced features. The system demonstrates professional software development practices, comprehensive security measures, innovative AI integration with ethical considerations, and continuous improvement through iterative development. Recent enhancements include MCP integration, staff admin access, improved waitlist functionality, enhanced UI/UX, Docker support, and comprehensive testing. The application is well-structured, thoroughly documented, and ready for deployment or further enhancement.
 

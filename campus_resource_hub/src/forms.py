@@ -275,6 +275,53 @@ class WaitlistForm(FlaskForm):
     def parsed_end_date(self):
         return getattr(self, '_parsed_dates', {}).get('end_date')
 
+class AdminWaitlistForm(FlaskForm):
+    """Admin form to edit waitlist entries."""
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    resource_id = SelectField('Resource', coerce=int, validators=[DataRequired()])
+    start_date = StringField('Start Date', validators=[DataRequired()], 
+                            render_kw={"type": "datetime-local"})
+    end_date = StringField('End Date', validators=[DataRequired()], 
+                          render_kw={"type": "datetime-local"})
+    status = SelectField('Status', choices=[
+        ('pending', 'Pending'),
+        ('notified', 'Notified'),
+        ('cancelled', 'Cancelled')
+    ], validators=[DataRequired()])
+    notes = TextAreaField('Notes', validators=[Optional()])
+    
+    def validate_start_date(self, field):
+        """Validate and parse start date."""
+        if field.data:
+            try:
+                parsed = datetime.strptime(field.data, '%Y-%m-%dT%H:%M')
+                if not hasattr(self, '_parsed_dates'):
+                    self._parsed_dates = {}
+                self._parsed_dates['start_date'] = parsed
+            except ValueError:
+                from wtforms.validators import ValidationError
+                raise ValidationError('Invalid date format.')
+    
+    def validate_end_date(self, field):
+        """Validate and parse end date."""
+        if field.data:
+            try:
+                parsed = datetime.strptime(field.data, '%Y-%m-%dT%H:%M')
+                if not hasattr(self, '_parsed_dates'):
+                    self._parsed_dates = {}
+                self._parsed_dates['end_date'] = parsed
+            except ValueError:
+                from wtforms.validators import ValidationError
+                raise ValidationError('Invalid date format.')
+    
+    @property
+    def parsed_start_date(self):
+        return getattr(self, '_parsed_dates', {}).get('start_date')
+    
+    @property
+    def parsed_end_date(self):
+        return getattr(self, '_parsed_dates', {}).get('end_date')
+
 
 class ReviewForm(FlaskForm):
     """Form to create/edit a review."""
