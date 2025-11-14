@@ -400,6 +400,14 @@ a.text-primary:hover {
     color: var(--iu-white);
 }
 
+#concierge-chatbot .card-header h6 {
+    color: var(--iu-white) !important;
+}
+
+#concierge-chatbot .card-header h6 i {
+    color: var(--iu-white) !important;
+}
+
 #concierge-chatbot .bg-primary {
     background-color: var(--iu-crimson) !important;
 }

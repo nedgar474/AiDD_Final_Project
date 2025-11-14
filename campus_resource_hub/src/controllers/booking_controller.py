@@ -133,6 +133,18 @@ def cancel(id):
         flash(f'An error occurred while cancelling the booking: {str(e)}', 'error')
         return redirect(url_for('booking.details', id=id))
 
+@booking_bp.route('/waitlist/<int:id>')
+@login_required
+def waitlist_details(id):
+    """Display waitlist entry details."""
+    waitlist_entry = waitlist_dao.get_or_404(id)
+    
+    # Ensure the waitlist entry belongs to the current user (unless admin)
+    if waitlist_entry.user_id != current_user.id and current_user.role != 'admin':
+        abort(403)
+    
+    return render_template('bookings/waitlist_details.html', waitlist_entry=waitlist_entry)
+
 @booking_bp.route('/waitlist/<int:id>/cancel', methods=['POST'])
 @login_required
 def cancel_waitlist(id):
@@ -144,7 +156,13 @@ def cancel_waitlist(id):
     
     waitlist_dao.update_status(id, 'cancelled')
     flash('Waitlist entry cancelled.', 'success')
-    return redirect(url_for('booking.list'))
+    
+    # Redirect to resource page if cancelled from details page, otherwise to bookings list
+    redirect_to_resource = request.form.get('redirect_to_resource', 'false').lower() == 'true'
+    if redirect_to_resource:
+        return redirect(url_for('resources.view', id=waitlist_entry.resource_id))
+    else:
+        return redirect(url_for('booking.list'))
 
 @booking_bp.route('/calendar')
 @login_required

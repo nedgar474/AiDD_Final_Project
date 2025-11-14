@@ -12,12 +12,17 @@ from .booking_proposer import BookingProposer
 class ResponseGenerator:
     """Generates formatted responses with links and actions."""
     
-    def __init__(self):
-        """Initialize response generator."""
+    def __init__(self, app=None):
+        """
+        Initialize response generator.
+        
+        Args:
+            app: Flask application instance (optional, needed for MCP)
+        """
         self.llm_client = LLMClient()
         self.context_summarizer = ContextSummarizer()
         self.role_filter = RoleFilter()
-        self.booking_proposer = BookingProposer()
+        self.booking_proposer = BookingProposer(app=app)
     
     def generate_response(self, query: str, user_role: str, user_id: int,
                          doc_chunks: List[Dict], db_results: List[Dict]) -> Dict:
@@ -162,12 +167,18 @@ IMPORTANT INSTRUCTIONS:
 - The context above is about CAMPUS RESOURCES (study rooms, computer labs, equipment, spaces) and how to BOOK them
 - This is NOT about LLM providers, AI models, or API keys - ignore any information about Ollama, OpenAI, Gemini, GPT models, or API keys
 - You MUST use the context about campus resources and booking to answer the question
-- For booking questions: Explain the booking process for campus resources (study rooms, labs, etc.), requirements, approval workflow, and how to create bookings based on the context
-- For resource questions: Describe what campus resources are (study rooms, labs, equipment), their fields, categories, and how to find/book them based on the context
-- Be specific and reference details from the context (e.g., "According to the booking process, you need to...")
-- Include resource names in your answer when available from the database context
+
+RESPONSE STYLE - KEEP IT CONCISE AND READABLE:
+- Keep responses brief and to the point - avoid unnecessary verbosity
+- Use simple, clear language that's easy to understand
+- NEVER include technical route paths (like "/resources/123/book" or "/bookings/calendar") in your responses
+- NEVER include code blocks, technical implementation details, or API endpoints
+- Focus on what the user needs to DO, not how the system works internally
+- For booking instructions: Provide 2-4 simple, numbered steps in plain language
+- For resource questions: Give direct, concise answers without technical jargon
+- Use bullet points or short paragraphs - avoid long walls of text
 - Format resource links as: [Resource Name](resource_id) where resource_id is the numeric ID
-- If the user wants to book something, explain the steps they need to take based on the booking process in the context
+- Include resource names when available from the database context
 - Never make up specific resource names, locations, or capabilities that aren't in the context
 - Respect user role: {user_role}
 - Be helpful, friendly, and actionable
@@ -180,6 +191,10 @@ Answer:"""
 User Question: {query}
 
 Instructions:
+- Keep responses brief and concise - avoid unnecessary verbosity
+- Use simple, clear language that's easy to understand
+- NEVER include technical route paths, code blocks, or API endpoints
+- Focus on what the user needs to DO in plain language
 - Provide helpful guidance about the Campus Resource Hub system
 - If you don't have specific information, provide general guidance
 - Be helpful and friendly

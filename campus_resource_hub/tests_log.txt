@@ -1,0 +1,182 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-7.4.0, pluggy-1.6.0 -- C:\Users\Ragde\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Ragde\Downloads\AiDD_Final_Project\campus_resource_hub
+plugins: anyio-4.11.0
+collecting ... collected 56 items
+
+tests/test_booking_logic.py::TestBookingConflictDetection::test_no_conflict_when_resource_available PASSED [  1%]
+tests/test_booking_logic.py::TestBookingConflictDetection::test_conflict_when_time_overlaps PASSED [  3%]
+tests/test_booking_logic.py::TestBookingConflictDetection::test_no_conflict_when_excluding_self PASSED [  5%]
+tests/test_booking_logic.py::TestBookingConflictDetection::test_no_conflict_with_cancelled_bookings PASSED [  7%]
+tests/test_booking_logic.py::TestBookingStatusTransitions::test_update_status_to_completed PASSED [  8%]
+tests/test_booking_logic.py::TestBookingStatusTransitions::test_update_status_to_cancelled PASSED [ 10%]
+tests/test_booking_logic.py::TestBookingStatusTransitions::test_update_status_to_active PASSED [ 12%]
+tests/test_booking_logic.py::TestBookingQueries::test_get_by_user_filters_by_status PASSED [ 14%]
+tests/test_booking_logic.py::TestBookingQueries::test_get_by_date_range PASSED [ 16%]
+tests/test_data_access.py::TestUserDAO::test_create_user PASSED          [ 17%]
+tests/test_data_access.py::TestUserDAO::test_get_by_id PASSED            [ 19%]
+tests/test_data_access.py::TestUserDAO::test_get_by_email PASSED         [ 21%]
+tests/test_data_access.py::TestUserDAO::test_get_by_username PASSED      [ 23%]
+tests/test_data_access.py::TestUserDAO::test_get_by_role PASSED          [ 25%]
+tests/test_data_access.py::TestUserDAO::test_suspend_user PASSED         [ 26%]
+tests/test_data_access.py::TestUserDAO::test_unsuspend_user PASSED       [ 28%]
+tests/test_data_access.py::TestResourceDAO::test_get_published PASSED    [ 30%]
+tests/test_data_access.py::TestResourceDAO::test_get_by_category PASSED  [ 32%]
+tests/test_data_access.py::TestResourceDAO::test_search PASSED           [ 33%]
+tests/test_data_access.py::TestBookingDAO::test_get_by_user PASSED       [ 35%]
+tests/test_data_access.py::TestBookingDAO::test_get_by_resource PASSED   [ 37%]
+tests/test_data_access.py::TestBookingDAO::test_check_conflict PASSED    [ 39%]
+tests/test_data_access.py::TestBookingDAO::test_get_by_date_range PASSED [ 41%]
+tests/test_data_access.py::TestBookingDAO::test_update_status PASSED     [ 42%]
+tests/test_data_access.py::TestMessageDAO::test_get_inbox PASSED         [ 44%]
+tests/test_data_access.py::TestMessageDAO::test_mark_as_read PASSED      [ 46%]
+tests/test_data_access.py::TestWaitlistDAO::test_get_by_user PASSED      [ 48%]
+tests/test_data_access.py::TestReviewDAO::test_get_by_resource FAILED    [ 50%]
+tests/test_data_access.py::TestReviewDAO::test_get_paginated FAILED      [ 51%]
+tests/test_data_access.py::TestNotificationDAO::test_get_by_user FAILED  [ 53%]
+tests/test_data_access.py::TestNotificationDAO::test_get_unread_count FAILED [ 55%]
+tests/test_data_access.py::TestNotificationDAO::test_mark_as_read FAILED [ 57%]
+tests/test_data_access.py::TestCalendarSubscriptionDAO::test_get_by_token PASSED [ 58%]
+tests/test_data_access.py::TestCalendarSubscriptionDAO::test_get_active_by_user PASSED [ 60%]
+tests/test_data_access.py::TestCalendarSubscriptionDAO::test_record_access PASSED [ 62%]
+tests/test_integration.py::TestAuthFlow::test_user_registration_and_login_flow FAILED [ 64%]
+tests/test_integration.py::TestBookingWorkflow::test_create_booking_workflow PASSED [ 66%]
+tests/test_integration.py::TestBookingWorkflow::test_booking_conflict_detection PASSED [ 67%]
+tests/test_integration.py::TestResourceManagement::test_resource_search_workflow PASSED [ 69%]
+tests/test_integration.py::TestResourceManagement::test_resource_creation_workflow FAILED [ 71%]
+tests/test_integration.py::TestDataAccessLayer::test_controllers_use_dal_not_direct_orm PASSED [ 73%]
+tests/test_integration.py::TestDataAccessLayer::test_dal_encapsulates_crud_operations PASSED [ 75%]
+tests/test_security.py::TestSQLInjectionProtection::test_sql_injection_in_search_query PASSED [ 76%]
+tests/test_security.py::TestSQLInjectionProtection::test_sql_injection_in_resource_title PASSED [ 78%]
+tests/test_security.py::TestSQLInjectionProtection::test_sql_injection_in_user_creation PASSED [ 80%]
+tests/test_security.py::TestSQLInjectionProtection::test_sql_injection_in_booking_notes PASSED [ 82%]
+tests/test_security.py::TestSQLInjectionProtection::test_parameterized_queries_used PASSED [ 83%]
+tests/test_security.py::TestTemplateEscaping::test_xss_in_resource_title PASSED [ 85%]
+tests/test_security.py::TestTemplateEscaping::test_xss_in_resource_description PASSED [ 87%]
+tests/test_security.py::TestTemplateEscaping::test_xss_in_user_username PASSED [ 89%]
+tests/test_security.py::TestTemplateEscaping::test_xss_in_booking_notes PASSED [ 91%]
+tests/test_security.py::TestTemplateEscaping::test_xss_in_message_body PASSED [ 92%]
+tests/test_security.py::TestParameterizedQueryVerification::test_dal_uses_sqlalchemy_orm PASSED [ 94%]
+tests/test_security.py::TestParameterizedQueryVerification::test_user_dao_uses_parameterized_queries PASSED [ 96%]
+tests/test_security.py::TestParameterizedQueryVerification::test_booking_dao_uses_parameterized_queries PASSED [ 98%]
+tests/test_security.py::TestParameterizedQueryVerification::test_no_raw_sql_in_controllers PASSED [100%]
+
+================================== FAILURES ===================================
+_____________________ TestReviewDAO.test_get_by_resource ______________________
+tests\test_data_access.py:254: in test_get_by_resource
+    review = Review(
+<string>:4: in __init__
+    ???
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:481: in _initialize_instance
+    with util.safe_reraise():
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:70: in __exit__
+    compat.raise_(
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\compat.py:208: in raise_
+    raise exception
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:479: in _initialize_instance
+    return manager.original_init(*mixed[1:], **kwargs)
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:1197: in _declarative_constructor
+    raise TypeError(
+E   TypeError: 'comment' is an invalid keyword argument for Review
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+______________________ TestReviewDAO.test_get_paginated _______________________
+tests\test_data_access.py:272: in test_get_paginated
+    review = Review(
+<string>:4: in __init__
+    ???
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:481: in _initialize_instance
+    with util.safe_reraise():
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:70: in __exit__
+    compat.raise_(
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\compat.py:208: in raise_
+    raise exception
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:479: in _initialize_instance
+    return manager.original_init(*mixed[1:], **kwargs)
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:1197: in _declarative_constructor
+    raise TypeError(
+E   TypeError: 'comment' is an invalid keyword argument for Review
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+____________________ TestNotificationDAO.test_get_by_user _____________________
+tests\test_data_access.py:294: in test_get_by_user
+    notification = Notification(
+<string>:4: in __init__
+    ???
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:481: in _initialize_instance
+    with util.safe_reraise():
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:70: in __exit__
+    compat.raise_(
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\compat.py:208: in raise_
+    raise exception
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:479: in _initialize_instance
+    return manager.original_init(*mixed[1:], **kwargs)
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:1197: in _declarative_constructor
+    raise TypeError(
+E   TypeError: 'notification_type' is an invalid keyword argument for Notification
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+__________________ TestNotificationDAO.test_get_unread_count __________________
+tests\test_data_access.py:312: in test_get_unread_count
+    notification = Notification(
+<string>:4: in __init__
+    ???
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:481: in _initialize_instance
+    with util.safe_reraise():
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:70: in __exit__
+    compat.raise_(
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\compat.py:208: in raise_
+    raise exception
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:479: in _initialize_instance
+    return manager.original_init(*mixed[1:], **kwargs)
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:1197: in _declarative_constructor
+    raise TypeError(
+E   TypeError: 'notification_type' is an invalid keyword argument for Notification
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+____________________ TestNotificationDAO.test_mark_as_read ____________________
+tests\test_data_access.py:330: in test_mark_as_read
+    notification = Notification(
+<string>:4: in __init__
+    ???
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:481: in _initialize_instance
+    with util.safe_reraise():
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:70: in __exit__
+    compat.raise_(
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\compat.py:208: in raise_
+    raise exception
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:479: in _initialize_instance
+    return manager.original_init(*mixed[1:], **kwargs)
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:1197: in _declarative_constructor
+    raise TypeError(
+E   TypeError: 'notification_type' is an invalid keyword argument for Notification
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+_____________ TestAuthFlow.test_user_registration_and_login_flow ______________
+tests\test_integration.py:39: in test_user_registration_and_login_flow
+    assert user is not None
+E   assert None is not None
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+___________ TestResourceManagement.test_resource_creation_workflow ____________
+tests\test_integration.py:141: in test_resource_creation_workflow
+    assert resource is not None
+E   assert None is not None
+---------------------------- Captured stderr setup ----------------------------
+'FLASK_ENV' is deprecated and will not be used in Flask 2.3. Use 'FLASK_DEBUG' instead.
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\flask_sqlalchemy\model.py:30
+  C:\Users\Ragde\AppData\Local\Programs\Python\Python311\Lib\site-packages\flask_sqlalchemy\model.py:30: SAWarning: relationship 'Review.resource' will copy column resources.id to column reviews.resource_id, which conflicts with relationship(s): 'Resource.reviews' (copies resources.id to reviews.resource_id), 'Review.resource_review' (copies resources.id to reviews.resource_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="resource_review,reviews"' to the 'Review.resource' relationship. (Background on this error at: https://sqlalche.me/e/14/qzyx)
+    return cls.query_class(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_data_access.py::TestReviewDAO::test_get_by_resource - TypeE...
+FAILED tests/test_data_access.py::TestReviewDAO::test_get_paginated - TypeErr...
+FAILED tests/test_data_access.py::TestNotificationDAO::test_get_by_user - Typ...
+FAILED tests/test_data_access.py::TestNotificationDAO::test_get_unread_count
+FAILED tests/test_data_access.py::TestNotificationDAO::test_mark_as_read - Ty...
+FAILED tests/test_integration.py::TestAuthFlow::test_user_registration_and_login_flow
+FAILED tests/test_integration.py::TestResourceManagement::test_resource_creation_workflow
+================== 7 failed, 49 passed, 1 warning in 21.08s ===================

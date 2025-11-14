@@ -12,10 +12,15 @@ from .role_filter import RoleFilter
 class QueryProcessor:
     """Processes user queries and retrieves relevant context."""
     
-    def __init__(self):
-        """Initialize query processor."""
+    def __init__(self, app=None):
+        """
+        Initialize query processor.
+        
+        Args:
+            app: Flask application instance (optional, needed for MCP)
+        """
         self.context_retriever = ContextRetriever()
-        self.db_retriever = DatabaseRetriever()
+        self.db_retriever = DatabaseRetriever(app=app)
         self.role_filter = RoleFilter()
     
     def process_query(self, query: str, user_role: str, user_id: int = None) -> Dict:

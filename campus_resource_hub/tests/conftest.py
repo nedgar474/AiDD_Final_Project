@@ -59,7 +59,24 @@ def test_user(app):
         )
         db.session.add(user)
         db.session.commit()
-        return user
+        # Store the ID before context closes to avoid DetachedInstanceError
+        user_id = user.id
+        user_email = user.email
+        user_username = user.username
+        user_role = user.role
+        # Expunge to prevent detached instance issues
+        db.session.expunge(user)
+    
+    # Return a simple object that can be used across contexts
+    # Tests should re-query within their own app context
+    class UserProxy:
+        def __init__(self, id, email, username, role):
+            self.id = id
+            self.email = email
+            self.username = username
+            self.role = role
+    
+    return UserProxy(user_id, user_email, user_username, user_role)
 
 
 @pytest.fixture
@@ -78,13 +95,31 @@ def test_admin(app):
         )
         db.session.add(admin)
         db.session.commit()
-        return admin
+        # Store the ID before context closes to avoid DetachedInstanceError
+        admin_id = admin.id
+        admin_email = admin.email
+        admin_username = admin.username
+        admin_role = admin.role
+        # Expunge to prevent detached instance issues
+        db.session.expunge(admin)
+    
+    # Return a simple object that can be used across contexts
+    # Tests should re-query within their own app context
+    class UserProxy:
+        def __init__(self, id, email, username, role):
+            self.id = id
+            self.email = email
+            self.username = username
+            self.role = role
+    
+    return UserProxy(admin_id, admin_email, admin_username, admin_role)
 
 
 @pytest.fixture
 def test_resource(app, test_user):
     """Create a test resource."""
     with app.app_context():
+        # Use the user_id from the proxy object
         resource = Resource(
             title='Test Resource',
             description='A test resource',
@@ -93,11 +128,21 @@ def test_resource(app, test_user):
             capacity=10,
             is_available=True,
             status='published',
-            owner_id=test_user.id
+            owner_id=test_user.id  # This is now just an integer, not a detached object
         )
         db.session.add(resource)
         db.session.commit()
-        return resource
+        # Store the ID before context closes
+        resource_id = resource.id
+        # Expunge to prevent detached instance issues
+        db.session.expunge(resource)
+    
+    # Return a simple object that can be used across contexts
+    class ResourceProxy:
+        def __init__(self, id):
+            self.id = id
+    
+    return ResourceProxy(resource_id)
 
 
 @pytest.fixture
@@ -109,7 +154,7 @@ def test_booking(app, test_user, test_resource):
         end_date = start_date + timedelta(hours=2)
         
         booking = Booking(
-            user_id=test_user.id,
+            user_id=test_user.id,  # These are now just integers
             resource_id=test_resource.id,
             start_date=start_date,
             end_date=end_date,
@@ -118,5 +163,25 @@ def test_booking(app, test_user, test_resource):
         )
         db.session.add(booking)
         db.session.commit()
-        return booking
+        # Store attributes before context closes
+        booking_id = booking.id
+        booking_start_date = booking.start_date
+        booking_end_date = booking.end_date
+        booking_status = booking.status
+        booking_user_id = booking.user_id
+        booking_resource_id = booking.resource_id
+        # Expunge to prevent detached instance issues
+        db.session.expunge(booking)
+    
+    # Return a simple object that can be used across contexts
+    class BookingProxy:
+        def __init__(self, id, start_date, end_date, status, user_id, resource_id):
+            self.id = id
+            self.start_date = start_date
+            self.end_date = end_date
+            self.status = status
+            self.user_id = user_id
+            self.resource_id = resource_id
+    
+    return BookingProxy(booking_id, booking_start_date, booking_end_date, booking_status, booking_user_id, booking_resource_id)
 

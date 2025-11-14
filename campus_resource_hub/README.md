@@ -2,10 +2,18 @@
 
 A full-stack web application for managing and booking campus resources (study rooms, computer labs, AV equipment, event spaces, etc.). Built with Flask, SQLAlchemy, and Bootstrap 5, featuring an AI-powered Resource Concierge assistant.
 
+**Project Type:** AiDD 2025 Capstone Project  
+**Module:** AI Driven Development (AiDD / X501)  
+**Instructor:** Prof. Jay Newquist
+
+---
+
 ## Table of Contents
 
 - [Features](#features)
 - [Technology Stack](#technology-stack)
+- [Application Architecture](#application-architecture)
+- [AI-First Development & Context Pack](#ai-first-development--context-pack)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -16,28 +24,60 @@ A full-stack web application for managing and booking campus resources (study ro
 - [API Documentation](#api-documentation)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
-- [License](#license)
+- [Additional Resources](#additional-resources)
 
 ---
 
 ## Features
 
-### Core Features
-- **User Management**: Registration, authentication, role-based access (Student, Staff, Admin)
-- **Resource Management**: CRUD operations for resources with lifecycle (draft/published/archived)
-- **Advanced Search**: Keyword, category, location, capacity, and availability-based filtering
-- **Booking System**: Calendar-based booking with conflict detection, recurrence, and approval workflows
-- **Messaging**: User-to-user messaging with admin moderation
-- **Reviews & Ratings**: 1-5 star ratings with text reviews and aggregate calculations
-- **Notifications**: Simulated notification system for booking events
-- **Admin Dashboard**: Full CRUD operations, analytics, and content moderation
+### Core Features (Required)
 
-### Advanced Features
+1. **User Management & Authentication**
+   - Sign up, sign in, sign out (email + password)
+   - Passwords stored hashed (bcrypt)
+   - Roles: Student, Staff, Admin with role-based access control
+
+2. **Resource Listings**
+   - CRUD operations for resources
+   - Fields: title, description, images, category, location, availability rules, owner, capacity, equipment lists
+   - Listing lifecycle: draft → published → archived
+
+3. **Search & Filter**
+   - Search by keyword, category, location, availability date/time, and capacity
+   - Sort options: recent, most booked, top rated
+
+4. **Booking & Scheduling**
+   - Calendar-based booking flow with start/end time
+   - Recurrence option (daily, weekly, monthly)
+   - Conflict detection and capacity checking
+   - Approval workflow: automatic for open resources, staff/admin approval for restricted resources
+
+5. **Messaging & Notifications**
+   - Email-like messaging system between users
+   - Simulated notifications for booking events (created, approved, rejected, cancelled, modified)
+   - Notification center with filtering and pagination
+
+6. **Reviews & Ratings**
+   - 1-5 star ratings for resources
+   - Text reviews with aggregate rating calculations
+   - Top-rated badges for highest and lowest rated resources
+
+7. **Admin Panel**
+   - Dashboard to manage users, resources, bookings
+   - Moderate reviews and flagged messages
+   - Analytics reports with 8 comprehensive visualizations
+   - Admin action logs
+
+8. **Documentation & Local Runbook**
+   - README with setup and run instructions
+   - requirements.txt with all dependencies
+   - Database migration steps documented
+
+### Advanced Features (Optional)
+
 - **AI Resource Concierge**: OpenAI GPT-4o-mini powered chatbot for natural language resource queries
 - **Waitlist System**: Join waitlists for unavailable resources with automatic notifications
-- **Calendar Integration**: iCal export and subscription links for calendar applications
-- **Image Carousel**: Multiple images per resource with auto-advance
-- **Recurrence Support**: Daily, weekly, and monthly recurring bookings
+- **Calendar Integration**: iCal export and subscription links for external calendar applications
 - **Personal Calendar**: Full calendar view of user bookings with multiple view options
 - **Analytics Dashboard**: 8 comprehensive reports with Chart.js visualizations
 
@@ -45,29 +85,134 @@ A full-stack web application for managing and booking campus resources (study ro
 
 ## Technology Stack
 
-### Backend
-- **Python 3.10+**
-- **Flask 2.2.5** - Web framework
-- **SQLAlchemy 1.4.41** - ORM
-- **Flask-Migrate 4.0.4** - Database migrations
-- **Flask-Login 0.6.2** - Authentication
-- **Flask-WTF 1.1.1** - Form handling and CSRF protection
-- **Flask-Bcrypt 1.0.1** - Password hashing
-- **OpenAI API** - AI Concierge (GPT-4o-mini)
+### Required Baseline
 
-### Database
-- **SQLite** - Development (default)
-- **PostgreSQL** - Production (optional)
+- **Backend**: Python 3.10+ with Flask 2.2.5
+- **Database**: SQLite for local development (PostgreSQL optional for deployment)
+- **Frontend**: Jinja2 templates (Flask) + Bootstrap 5
+- **Auth**: Flask-Login 0.6.2 with Flask-Bcrypt 1.0.1 for password hashing
+- **Testing**: pytest 7.4.0 for unit, integration, and end-to-end tests
+- **Version Control**: GitHub (branching, PRs required)
 
-### Frontend
-- **Jinja2** - Template engine
-- **Bootstrap 5** - UI framework
-- **FullCalendar.js** - Calendar interface
-- **Chart.js** - Data visualization
+### Additional Technologies
 
-### Development Tools
-- **pytest 7.4.0** - Testing framework
-- **python-dotenv 1.0.0** - Environment variable management
+- **ORM**: SQLAlchemy 1.4.41
+- **Migrations**: Flask-Migrate 4.0.4
+- **Forms**: Flask-WTF 1.1.1 (CSRF protection)
+- **AI**: OpenAI API (GPT-4o-mini) for Resource Concierge
+- **Calendar**: FullCalendar.js for booking interface
+- **Visualization**: Chart.js for admin analytics
+
+---
+
+## Application Architecture
+
+The application follows a **Model-View-Controller (MVC) pattern** with a **Data Access Layer (DAL)** to separate presentation, business logic, and data access.
+
+### Architecture Layers
+
+1. **Model Layer** (`src/models/`)
+   - SQLAlchemy ORM classes managing all database operations
+   - 11 model classes: User, Resource, Booking, Message, Review, Notification, Waitlist, AdminLog, ResourceImage, CalendarSubscription
+   - No raw SQL queries; all operations use ORM
+
+2. **View Layer** (`src/views/templates/`)
+   - HTML/Jinja2 templates rendering the interface
+   - Organized by feature: admin/, bookings/, messages/, notifications/, profile/, resources/
+   - Template inheritance with base.html
+
+3. **Controller Layer** (`src/controllers/`)
+   - Flask routes (blueprints) coordinating requests and responses
+   - 8 blueprints: main_bp, auth_bp, resource_bp, booking_bp, message_bp, admin_bp, profile_bp, notification_bp
+   - Decorators for authentication and authorization
+
+4. **Data Access Layer** (`src/data_access/`)
+   - Encapsulated database interactions (CRUD methods) in dedicated Python modules/classes
+   - 9 DAO classes: UserDAO, ResourceDAO, BookingDAO, MessageDAO, ReviewDAO, NotificationDAO, WaitlistDAO, CalendarSubscriptionDAO
+   - Controllers use DAO methods instead of direct ORM queries
+   - Ensures controllers do not issue raw SQL
+
+### Folder Structure
+
+```
+campus_resource_hub/
+├── src/
+│   ├── controllers/      # Flask routes and blueprints
+│   ├── models/           # ORM classes or schema definitions
+│   ├── views/            # HTML/Jinja templates
+│   ├── data_access/     # Encapsulated CRUD logic
+│   ├── static/           # Static files (CSS, images, uploads)
+│   └── ai_features/      # AI Concierge feature
+├── tests/                # Test suite
+├── migrations/           # Flask-Migrate database migrations
+└── docs/                # Documentation
+```
+
+---
+
+## AI-First Development & Context Pack
+
+This repository is configured for **AI-assisted and context-aware development** using Cursor AI, GitHub Copilot Agent Mode, and other AI tools. The folder structure helps AI tools understand the project's architecture and generate accurate, contextually relevant code.
+
+### AI-First Folder Structure
+
+#### `.prompt/` Folder
+- **`dev_notes.md`**: Log of all AI interactions and outcomes throughout development
+- **`golden_prompts.md`**: High-impact prompts and responses that were especially effective
+
+#### `docs/context/` Folder (Context Pack)
+This folder system collectively forms the **Context Pack**, a lightweight structure designed to help AI tools ground their reasoning in the project's goals, data, and user context.
+
+- **`APA/`**: Artifacts from Agility, Processes & Automation module
+  - BPMN future-state process models, acceptance tests, backlog CSVs
+- **`DT/`**: Design Thinking artifacts
+  - Personas, journey maps, usability findings
+- **`PM/`**: Product Management materials
+  - PRDs, OKRs, product strategy briefs, stakeholder maps
+- **`shared/`**: Common items
+  - Personas, glossary, OKRs shared across modules
+- **`AiDD/`**: Project-specific context
+  - Final Project Requirements, PRD, ERD diagram, database schema, compliance reports, demo steps
+
+#### `tests/ai_eval/` Folder
+- **Optional AI feature validation tests**
+- Tests verify AI-generated code follows project patterns
+- Validates AI-generated features align with project structure
+
+### AI Integration & Collaboration
+
+The Campus Resource Hub project integrates AI into both the development workflow and application functionality. Throughout development, AI tools (Cursor AI, GitHub Copilot) were used to assist with code generation, documentation, testing, and debugging. All AI interactions are documented in `.prompt/dev_notes.md`, and AI-authored code is marked with attribution comments.
+
+The **Resource Concierge** feature demonstrates context-aware AI integration. This OpenAI GPT-4o-mini powered chatbot uses a Retrieval-Augmented Generation (RAG) approach, referencing materials from `/docs/context/` (including PRDs, personas, acceptance tests, and project documentation) to answer natural language questions about campus resources. The concierge also queries the actual database via the Data Access Layer to provide accurate, real-time information about resource availability and bookings. This implementation showcases how AI can leverage project context to provide meaningful, grounded responses that never fabricate information.
+
+#### Model Context Protocol (MCP) Integration
+
+The project implements **Model Context Protocol (MCP)** to provide a safer, structured interface for AI agents to query the database. MCP enables read-only, secure database access for the AI Concierge feature.
+
+**Key Features:**
+- **Read-Only Access**: MCP server provides structured, read-only database queries
+- **Role-Based Filtering**: Enforces role-based access control (student, staff, admin)
+- **Automatic Fallback**: Falls back to direct DAL access if MCP is unavailable
+- **Environment Configuration**: Can be enabled/disabled via `USE_MCP` environment variable (default: enabled)
+
+**MCP Methods:**
+- `query_resources` - Search resources by query, role, category
+- `get_resource_by_id` - Get specific resource details
+- `get_resource_availability` - Check resource availability
+- `get_resource_reviews` - Get reviews for a resource
+- `get_categories` - List all resource categories
+
+**Implementation Files:**
+- `src/ai_features/mcp_server.py` - MCP server implementation
+- `src/ai_features/concierge/mcp_client.py` - MCP client wrapper
+
+The AI Concierge automatically uses MCP when available, ensuring secure, structured database access. See `.prompt/dev_notes.md` for detailed implementation notes.
+
+Ethical considerations were paramount: all AI-generated code and documentation was reviewed, tested, and validated before inclusion. The project maintains transparency about AI usage as part of academic integrity, with comprehensive documentation of prompts, tools used, and how AI influenced design decisions.
+
+### README Requirement
+
+As required by the project specifications, this README describes the folder purpose and AI integration. The Context Pack structure enables AI tools to understand project requirements, user needs, and business context, allowing for more accurate code generation, documentation, and testing assistance.
 
 ---
 
@@ -97,8 +242,8 @@ You should see Python 3.10 or higher.
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd campus_resource_hub
+git clone https://github.com/nedgar474/AiDD_Final_Project.git
+cd AiDD_Final_Project/campus_resource_hub
 ```
 
 ### 2. Create a Virtual Environment
@@ -195,8 +340,6 @@ This will create the SQLite database file at `instance/campus_resource_hub.db` w
 Flask-Migrate provides version-controlled database migrations. This is the recommended approach for managing schema changes.
 
 #### Check Migration Status
-
-First, check if migrations are already initialized and view current status:
 
 ```bash
 # Check current database revision
@@ -349,9 +492,11 @@ python seed_data.py
 
 This creates:
 - Sample users (admin, staff, students)
-- Sample resources (study rooms, labs, equipment)
+- Sample resources (study rooms, labs, equipment) **with associated images**
 - Sample bookings
 - Sample reviews
+
+**Note**: The seed script creates resources with their ResourceImage records linked, so resources will display with image carousels. The image files must exist in `src/static/uploads/` for the images to display properly.
 
 **Default Admin Credentials** (from seed data):
 - Email: `admin@example.com`
@@ -400,6 +545,8 @@ python run.py
 
 ### Running Tests
 
+As required by the project specifications, the application includes comprehensive tests:
+
 ```bash
 # Run all tests
 pytest
@@ -409,6 +556,8 @@ pytest -v
 
 # Run specific test file
 pytest tests/test_booking_logic.py
+pytest tests/test_data_access.py
+pytest tests/test_integration.py
 
 # Run with coverage
 pytest --cov=src tests/
@@ -416,14 +565,37 @@ pytest --cov=src tests/
 
 ### Test Structure
 
-- **`tests/test_data_access.py`**: Data Access Layer tests
-- **`tests/test_integration.py`**: Integration tests
-- **`tests/test_booking_logic.py`**: Booking logic tests
-- **`tests/ai_eval/test_ai_generated_features.py`**: AI code evaluation tests
+The test suite includes the following required tests:
+
+1. **Unit Tests for Booking Logic** (`tests/test_booking_logic.py`)
+   - Conflict detection tests
+   - Status transition tests
+   - Booking query tests
+
+2. **Data Access Layer Tests** (`tests/test_data_access.py`)
+   - Tests verifying CRUD operations independently from Flask route handlers
+   - Tests for all DAO classes (UserDAO, ResourceDAO, BookingDAO, etc.)
+   - Ensures DAL properly encapsulates database operations
+
+3. **Integration Tests** (`tests/test_integration.py`)
+   - Auth flow test (register → login → access protected route)
+   - Booking workflow test (end-to-end scenario demonstrating booking a resource through the UI)
+   - Resource management workflow tests
+
+4. **AI Code Evaluation Tests** (`tests/ai_eval/test_ai_generated_features.py`)
+   - Tests verifying AI-generated code follows project patterns
+   - Validates AI-generated DAL code integration
 
 ### Test Configuration
 
 Tests use an in-memory SQLite database and have CSRF protection disabled for easier testing.
+
+### Security Checks
+
+The test suite includes security checks:
+- **SQL Injection Protection**: All database queries use SQLAlchemy ORM (parameterized by default)
+- **Template Escaping**: Jinja2 automatically escapes template variables to prevent XSS
+- **File Upload Sanitization**: Tests verify `secure_filename()` is used for uploads
 
 ---
 
@@ -437,21 +609,86 @@ campus_resource_hub/
 │   ├── extensions.py             # Flask extensions initialization
 │   ├── forms.py                  # WTForms form definitions
 │   ├── models/                   # SQLAlchemy ORM models
+│   │   ├── user.py
+│   │   ├── resource.py
+│   │   ├── booking.py
+│   │   ├── message.py
+│   │   ├── review.py
+│   │   ├── notification.py
+│   │   ├── waitlist.py
+│   │   ├── admin_log.py
+│   │   ├── resource_image.py
+│   │   └── calendar_subscription.py
 │   ├── controllers/              # Flask blueprints (routes)
+│   │   ├── main_controller.py
+│   │   ├── auth_controller.py
+│   │   ├── resource_controller.py
+│   │   ├── booking_controller.py
+│   │   ├── message_controller.py
+│   │   ├── admin_controller.py
+│   │   ├── profile_controller.py
+│   │   └── notification_controller.py
 │   ├── data_access/              # Data Access Layer (DAO classes)
+│   │   ├── base_dao.py
+│   │   ├── user_dao.py
+│   │   ├── resource_dao.py
+│   │   ├── booking_dao.py
+│   │   ├── review_dao.py
+│   │   ├── message_dao.py
+│   │   ├── notification_dao.py
+│   │   ├── waitlist_dao.py
+│   │   └── calendar_subscription_dao.py
 │   ├── views/                    # Jinja2 templates
 │   │   └── templates/
+│   │       ├── base.html
+│   │       ├── index.html
+│   │       ├── admin/
+│   │       ├── bookings/
+│   │       ├── messages/
+│   │       ├── notifications/
+│   │       ├── profile/
+│   │       └── resources/
 │   ├── static/                   # Static files (CSS, images, uploads)
+│   │   ├── css/
+│   │   └── uploads/
 │   ├── utils/                    # Utility functions
+│   │   └── notifications.py
 │   └── ai_features/              # AI Concierge feature
 │       └── concierge/
+│           ├── concierge_controller.py
+│           ├── llm_client.py
+│           ├── context_retriever.py
+│           ├── database_retriever.py
+│           ├── query_processor.py
+│           ├── response_generator.py
+│           ├── booking_proposer.py
+│           ├── role_filter.py
+│           └── context_summarizer.py
 ├── migrations/                   # Flask-Migrate database migrations
 │   └── versions/                 # Migration version files
 ├── tests/                        # Test suite
+│   ├── test_data_access.py       # DAL unit tests
+│   ├── test_integration.py      # Integration tests
+│   ├── test_booking_logic.py    # Booking logic unit tests
+│   └── ai_eval/                 # AI code evaluation tests
+│       └── test_ai_generated_features.py
 ├── docs/                         # Documentation
-│   └── context/                  # Context files for AI Concierge
-├── instance/                     # Instance-specific files (database, etc.)
+│   └── context/                  # Context Pack for AI tools
+│       ├── APA/                  # Agility, Processes & Automation artifacts
+│       ├── DT/                   # Design Thinking artifacts
+│       ├── PM/                   # Product Management materials
+│       ├── shared/               # Common items (personas, glossary, OKRs)
+│       └── AiDD/                 # Project-specific context
+│           ├── Final_Project_Requirements.md
+│           ├── PRD.md
+│           ├── ERD_Diagram.md
+│           ├── database_schema.md
+│           ├── REQUIREMENTS_COMPLIANCE_REPORT.md
+│           └── ...
 ├── .prompt/                      # AI development documentation
+│   ├── dev_notes.md              # Log of AI interactions and outcomes
+│   └── golden_prompts.md         # High-impact prompts and responses
+├── instance/                     # Instance-specific files (database, etc.)
 ├── requirements.txt              # Python dependencies
 ├── run.py                        # Application entry point
 ├── seed_data.py                  # Database seeding script
@@ -460,13 +697,14 @@ campus_resource_hub/
 
 ### Key Directories
 
-- **`src/models/`**: Database models (User, Resource, Booking, etc.)
-- **`src/controllers/`**: Route handlers organized by feature
-- **`src/data_access/`**: Data Access Objects (DAO) for database operations
-- **`src/views/templates/`**: HTML templates with Jinja2
+- **`src/models/`**: Database models (User, Resource, Booking, etc.) - Model Layer
+- **`src/controllers/`**: Route handlers organized by feature - Controller Layer
+- **`src/data_access/`**: Data Access Objects (DAO) for database operations - Data Access Layer
+- **`src/views/templates/`**: HTML templates with Jinja2 - View Layer
 - **`src/static/`**: Static assets (CSS, JavaScript, uploaded images)
 - **`migrations/`**: Database migration scripts
-- **`docs/context/`**: Documentation files used by AI Concierge
+- **`docs/context/`**: Context Pack - Documentation files used by AI tools and Resource Concierge
+- **`.prompt/`**: AI development documentation and prompt logs
 
 ---
 
@@ -509,7 +747,7 @@ campus_resource_hub/
 - `GET /admin/users` - User management
 - `GET /admin/resources` - Resource management
 - `GET /admin/bookings` - Booking management
-- `GET /admin/reports` - Analytics reports
+- `GET /admin/reports` - Analytics reports (usage metrics)
 - `GET /admin/logs` - Admin action logs
 
 #### AI Concierge
@@ -551,45 +789,6 @@ See `DEPLOYMENT.md` for detailed deployment instructions.
 
 ---
 
-## Troubleshooting
-
-### Common Issues
-
-#### Database Errors
-
-**Issue**: `OperationalError: no such column`
-- **Solution**: Run database migrations: `flask db upgrade`
-- Or manually create tables: `python -c "from src.app import create_app; from src.extensions import db; app = create_app(); app.app_context().push(); db.create_all()"`
-
-#### Import Errors
-
-**Issue**: `ModuleNotFoundError`
-- **Solution**: Ensure virtual environment is activated and dependencies are installed: `pip install -r requirements.txt`
-
-#### OpenAI API Errors
-
-**Issue**: Resource Concierge not working
-- **Solution**: 
-  1. Check that `OPENAI_API_KEY` is set in `.env` file
-  2. Verify API key is valid
-  3. Check internet connection
-  4. Review error logs in Flask console
-
-#### Port Already in Use
-
-**Issue**: `Address already in use`
-- **Solution**: 
-  - Use a different port: `flask run --port 5001`
-  - Or kill the process using port 5000
-
-### Getting Help
-
-- Check the logs in the Flask console for error messages
-- Review the `docs/context/AiDD/` folder for detailed documentation
-- Check `REQUIREMENTS_COMPLIANCE_REPORT.md` for feature documentation
-
----
-
 ## Contributing
 
 ### Development Workflow
@@ -617,19 +816,40 @@ See `DEPLOYMENT.md` for detailed deployment instructions.
 
 ---
 
-## License
+## Additional Resources
 
-This project is part of the AiDD 2025 Capstone Project. See project requirements for licensing information.
+### Documentation
+
+- **Final Project Requirements**: `docs/context/AiDD/Final_Project_Requirements.md`
+- **Product Requirements Document (PRD)**: `docs/context/AiDD/PRD.md`
+- **Database Schema**: `docs/context/AiDD/database_schema.md`
+- **ER Diagram**: `docs/context/AiDD/ERD_Diagram.md` (Mermaid format)
+- **Requirements Compliance Report**: `docs/context/AiDD/REQUIREMENTS_COMPLIANCE_REPORT.md`
+- **Project Summary**: `docs/context/AiDD/project_summary.md`
+- **Demo Steps**: `docs/context/AiDD/Demo_Steps.md`
+- **Deployment Guide**: `DEPLOYMENT.md`
+
+### AI Development Documentation
+
+- **AI Development Notes**: `.prompt/dev_notes.md` - Log of all AI interactions and outcomes
+- **Golden Prompts**: `.prompt/golden_prompts.md` - High-impact prompts and responses
+
+### Context Pack
+
+The `docs/context/` folder contains the Context Pack, which includes:
+- **APA/**: Agility, Processes & Automation artifacts (BPMN models, acceptance tests)
+- **DT/**: Design Thinking artifacts (personas, journey maps)
+- **PM/**: Product Management materials (PRDs, OKRs)
+- **shared/**: Common items (personas, glossary, OKRs)
+- **AiDD/**: Project-specific context and documentation
+
+These materials help AI tools understand project requirements, user needs, and business context.
 
 ---
 
-## Additional Resources
+## License
 
-- **Database Schema**: See `docs/context/AiDD/database_schema.md`
-- **Project Summary**: See `docs/context/AiDD/project_summary.md`
-- **Requirements Compliance**: See `docs/context/AiDD/REQUIREMENTS_COMPLIANCE_REPORT.md`
-- **Deployment Guide**: See `DEPLOYMENT.md`
-- **AI Concierge Setup**: See `docs/context/AiDD/development_options.md`
+This project is part of the AiDD 2025 Capstone Project. See project requirements for licensing information.
 
 ---
 
@@ -637,3 +857,4 @@ This project is part of the AiDD 2025 Capstone Project. See project requirements
 
 For issues, questions, or contributions, please refer to the project documentation or contact the development team.
 
+**GitHub Repository**: https://github.com/nedgar474/AiDD_Final_Project

@@ -31,6 +31,29 @@ def compose():
         return redirect(url_for('message.inbox'))
     
     form = MessageForm()
+    
+    # Handle reply - pre-populate form fields
+    reply_to_id = request.args.get('reply_to', type=int)
+    if reply_to_id and request.method == 'GET':
+        original_message = Message.query.get(reply_to_id)
+        if original_message:
+            # Verify user has permission to reply (must be sender or recipient)
+            if original_message.recipient_id == current_user.id or original_message.sender_id == current_user.id:
+                # Set recipient to the other party
+                if original_message.recipient_id == current_user.id:
+                    # Current user is recipient, reply to sender
+                    form.recipient.data = original_message.sender.username
+                else:
+                    # Current user is sender, reply to recipient
+                    form.recipient.data = original_message.recipient.username
+                
+                # Set subject with "Re: " prefix if not already present
+                subject = original_message.subject
+                if not subject.startswith('Re: '):
+                    form.subject.data = f'Re: {subject}'
+                else:
+                    form.subject.data = subject
+    
     if form.validate_on_submit():
         # Find recipient by username or email
         recipient = User.query.filter((User.username == form.recipient.data) | (User.email == form.recipient.data)).first()

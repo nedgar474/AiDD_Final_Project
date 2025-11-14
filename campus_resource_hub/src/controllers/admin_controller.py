@@ -125,10 +125,15 @@ def create_user():
             flash('Username already exists.', 'danger')
             return render_template('admin/user_form.html', form=form, title='Create User')
         
+        # Password is required when creating a new user
+        if not form.password.data:
+            flash('Password is required when creating a new user.', 'danger')
+            return render_template('admin/user_form.html', form=form, title='Create User')
+        
         user = User(
             email=form.email.data,
             username=form.username.data,
-            password_hash=bcrypt.generate_password_hash(form.password.data).decode('utf-8') if form.password.data else '',
+            password_hash=bcrypt.generate_password_hash(form.password.data).decode('utf-8'),
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             department=form.department.data,

@@ -10,9 +10,19 @@ from datetime import datetime, timedelta
 
 concierge_bp = Blueprint('concierge', __name__, url_prefix='/concierge')
 
-# Initialize processors
-query_processor = QueryProcessor()
-response_generator = ResponseGenerator()
+# Initialize processors (will be initialized with app context in before_request)
+query_processor = None
+response_generator = None
+
+
+@concierge_bp.before_request
+def initialize_processors():
+    """Initialize processors with Flask app context for MCP support."""
+    global query_processor, response_generator
+    if query_processor is None:
+        query_processor = QueryProcessor(app=current_app)
+    if response_generator is None:
+        response_generator = ResponseGenerator(app=current_app)
 
 # Cache for health check results (to avoid hitting rate limits)
 _health_check_cache = {

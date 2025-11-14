@@ -15,24 +15,62 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        # Find user by email
-        user = User.query.filter_by(email=form.email.data).first()
-        
-        # Check if user exists and password is correct
-        if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
+        try:
+            # Find user by email
+            user = User.query.filter_by(email=form.email.data).first()
+            
+            if not user:
+                flash('Invalid email or password. Please try again.', 'danger')
+                return render_template('login.html', form=form)
+            
+            # Check if user has a password hash
+            if not user.password_hash:
+                flash('Account error: No password set. Please contact an administrator or reset your password.', 'danger')
+                return render_template('login.html', form=form)
+            
+            # Check if user is suspended
+            if user.is_suspended:
+                flash(f'Your account has been suspended. Reason: {user.suspension_reason or "No reason provided"}', 'danger')
+                return render_template('login.html', form=form)
+            
+            # Check if user is active
             if not user.is_active:
                 flash('Your account has been deactivated. Please contact an administrator.', 'danger')
                 return render_template('login.html', form=form)
             
-            # Log the user in
-            login_user(user, remember=form.remember.data)
-            flash(f'Welcome back, {user.first_name or user.username}!', 'success')
+            # Check if password is correct
+            try:
+                password_valid = bcrypt.check_password_hash(user.password_hash, form.password.data)
+            except Exception as e:
+                # Log the error for debugging
+                import logging
+                logging.error(f"Password check error: {str(e)}")
+                flash('Authentication error. Please try again.', 'danger')
+                return render_template('login.html', form=form)
             
-            # Redirect to dashboard or next page
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
+            if password_valid:
+                # Log the user in (remember me checkbox is hidden, so always False)
+                login_user(user, remember=False)
+                flash(f'Welcome back, {user.first_name or user.username}!', 'success')
+                
+                # Redirect to dashboard or next page
+                next_page = request.args.get('next')
+                return redirect(next_page) if next_page else redirect(url_for('main.dashboard'))
+            else:
+                flash('Invalid email or password. Please try again.', 'danger')
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            logging.error(f"Login error: {str(e)}", exc_info=True)
+            flash('An error occurred during login. Please try again.', 'danger')
+    elif request.method == 'POST':
+        # Form validation failed
+        if form.errors:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f'{field}: {error}', 'danger')
         else:
-            flash('Invalid email or password. Please try again.', 'danger')
+            flash('Please fill in all required fields.', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -63,7 +101,7 @@ def register():
             first_name=form.first_name.data if form.first_name.data else None,
             last_name=form.last_name.data if form.last_name.data else None,
             department=form.department.data if form.department.data else None,
-            role='student',  # Default role for new registrations
+            role=form.role.data,  # Use selected role from form
             is_active=True,
             is_suspended=False
         )

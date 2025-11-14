@@ -90,16 +90,29 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.department.label(class="form-label") }}
-                            {{ form.department(class="form-control") }}
-                            {% if form.department.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.department.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.department.label(class="form-label") }}
+                                {{ form.department(class="form-control") }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.department.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.role.label(class="form-label") }}
+                                {{ form.role(class="form-select") }}
+                                {% if form.role.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.role.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <div class="d-grid gap-2">

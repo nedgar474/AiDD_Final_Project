@@ -1,22 +1,75 @@
 """
-Database Retriever - Queries database using DAL for resource information.
+Database Retriever - Queries database using DAL or MCP for resource information.
+
+This module supports both direct DAL access and MCP (Model Context Protocol) access.
+MCP is preferred when available as it provides a safer, structured interface for
+AI agents to query the database.
 """
 import re
+import os
 from typing import List, Dict, Optional
 from datetime import datetime, timedelta
 from ...data_access import ResourceDAO, BookingDAO, ReviewDAO
 from ...models.resource import Resource
 from ...models.booking import Booking
 
+# Try to import MCP client (optional)
+try:
+    from .mcp_client import MCPClient
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    MCPClient = None
+
 
 class DatabaseRetriever:
-    """Retrieves relevant information from database using DAL."""
+    """
+    Retrieves relevant information from database using DAL or MCP.
     
-    def __init__(self):
-        """Initialize database retriever with DAOs."""
+    Uses MCP (Model Context Protocol) when available for safer, structured
+    database access. Falls back to direct DAL access if MCP is not available.
+    """
+    
+    def __init__(self, app=None, use_mcp: Optional[bool] = None):
+        """
+        Initialize database retriever.
+        
+        Args:
+            app: Flask application instance (optional, needed for MCP)
+            use_mcp: Force MCP usage (True) or direct DAL (False). 
+                    If None, uses MCP if available and enabled.
+        """
         self.resource_dao = ResourceDAO()
         self.booking_dao = BookingDAO()
         self.review_dao = ReviewDAO()
+        
+        # Initialize MCP client if available
+        self.mcp_client = None
+        self.use_mcp = use_mcp
+        
+        if MCP_AVAILABLE and MCPClient:
+            try:
+                # Check if MCP is enabled via environment variable
+                if use_mcp is None:
+                    use_mcp = os.environ.get('USE_MCP', 'true').lower() == 'true'
+                
+                if use_mcp:
+                    self.mcp_client = MCPClient(app)
+                    if self.mcp_client.is_enabled():
+                        self.use_mcp = True
+                    else:
+                        self.use_mcp = False
+                        self.mcp_client = None
+                else:
+                    self.use_mcp = False
+            except Exception as e:
+                # If MCP initialization fails, fall back to DAL
+                import logging
+                logging.warning(f"MCP initialization failed, using DAL: {str(e)}")
+                self.use_mcp = False
+                self.mcp_client = None
+        else:
+            self.use_mcp = False
     
     def extract_keywords(self, query: str) -> List[str]:
         """
@@ -41,6 +94,8 @@ class DatabaseRetriever:
         """
         Query resources based on user query.
         
+        Uses MCP if available, otherwise falls back to direct DAL access.
+        
         Args:
             query: User query
             user_role: User role (student, staff, admin)
@@ -49,6 +104,30 @@ class DatabaseRetriever:
         Returns:
             List of resource information dictionaries
         """
+        # Try MCP first if available
+        if self.use_mcp and self.mcp_client:
+            try:
+                mcp_results = self.mcp_client.query_resources(
+                    query=query,
+                    user_role=user_role,
+                    limit=limit
+                )
+                if mcp_results:
+                    # Enhance MCP results with additional fields from DAL
+                    enhanced_results = []
+                    for result in mcp_results:
+                        resource = self.resource_dao.get_by_id(result['id'])
+                        if resource:
+                            result['average_rating'] = resource.average_rating()
+                            result['review_count'] = resource.review_count()
+                            result['status'] = resource.status
+                        enhanced_results.append(result)
+                    return enhanced_results
+            except Exception as e:
+                import logging
+                logging.warning(f"MCP query failed, falling back to DAL: {str(e)}")
+        
+        # Fall back to direct DAL access
         keywords = self.extract_keywords(query)
         keyword_str = ' '.join(keywords) if keywords else ''
         

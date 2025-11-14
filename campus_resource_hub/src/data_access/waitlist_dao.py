@@ -30,8 +30,25 @@ class WaitlistDAO(BaseDAO):
         return query.order_by(Waitlist.created_at.asc()).all()
     
     def check_existing(self, user_id: int, resource_id: int, 
-                      start_date: datetime, end_date: datetime) -> Optional[Waitlist]:
-        """Check if user already has a pending waitlist entry for this time period."""
+                      start_date: datetime, end_date: datetime, 
+                      auto_cancel_expired: bool = True) -> Optional[Waitlist]:
+        """
+        Check if user already has a pending waitlist entry for this time period.
+        
+        Args:
+            user_id: User ID
+            resource_id: Resource ID
+            start_date: Start date to check
+            end_date: End date to check
+            auto_cancel_expired: If True, automatically cancel expired entries before checking
+            
+        Returns:
+            Waitlist entry if found, None otherwise
+        """
+        # Auto-cancel expired entries before checking
+        if auto_cancel_expired:
+            self.cancel_expired_entries()
+        
         return self.model_class.query.filter(
             Waitlist.user_id == user_id,
             Waitlist.resource_id == resource_id,
@@ -53,4 +70,69 @@ class WaitlistDAO(BaseDAO):
                 entry.notified_at = datetime.utcnow()
             db.session.commit()
         return entry
+    
+    def cancel_expired_entries(self) -> int:
+        """
+        Automatically cancel waitlist entries where the requested time has passed.
+        
+        Returns:
+            Number of entries cancelled
+        """
+        now = datetime.utcnow()
+        expired_entries = self.model_class.query.filter(
+            Waitlist.status == 'pending',
+            Waitlist.requested_end_date < now
+        ).all()
+        
+        cancelled_count = 0
+        for entry in expired_entries:
+            entry.status = 'cancelled'
+            cancelled_count += 1
+        
+        if cancelled_count > 0:
+            db.session.commit()
+        
+        return cancelled_count
+    
+    def get_by_user(self, user_id: int, status: Optional[str] = None, auto_cancel_expired: bool = True) -> List[Waitlist]:
+        """
+        Get waitlist entries for a user.
+        
+        Args:
+            user_id: User ID
+            status: Optional status filter
+            auto_cancel_expired: If True, automatically cancel expired entries before querying
+            
+        Returns:
+            List of waitlist entries
+        """
+        # Auto-cancel expired entries before querying
+        if auto_cancel_expired:
+            self.cancel_expired_entries()
+        
+        query = self.model_class.query.filter_by(user_id=user_id)
+        if status:
+            query = query.filter_by(status=status)
+        return query.order_by(Waitlist.created_at.desc()).all()
+    
+    def get_by_resource(self, resource_id: int, status: Optional[str] = None, auto_cancel_expired: bool = True) -> List[Waitlist]:
+        """
+        Get waitlist entries for a resource.
+        
+        Args:
+            resource_id: Resource ID
+            status: Optional status filter
+            auto_cancel_expired: If True, automatically cancel expired entries before querying
+            
+        Returns:
+            List of waitlist entries
+        """
+        # Auto-cancel expired entries before querying
+        if auto_cancel_expired:
+            self.cancel_expired_entries()
+        
+        query = self.model_class.query.filter_by(resource_id=resource_id)
+        if status:
+            query = query.filter_by(status=status)
+        return query.order_by(Waitlist.created_at.asc()).all()
 

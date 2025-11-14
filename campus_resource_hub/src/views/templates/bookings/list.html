@@ -86,7 +86,8 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{{ url_for('resources.view', id=entry.resource.id) }}" class="btn btn-sm btn-outline-primary">View Resource</a>
+                        <a href="{{ url_for('booking.waitlist_details', id=entry.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                        <a href="{{ url_for('resources.view', id=entry.resource.id) }}" class="btn btn-sm btn-outline-secondary">View Resource</a>
                         <form method="POST" action="{{ url_for('booking.cancel_waitlist', id=entry.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this waitlist entry?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
                         </form>

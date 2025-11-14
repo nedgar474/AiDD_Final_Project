@@ -11,9 +11,14 @@ from .role_filter import RoleFilter
 class BookingProposer:
     """Proposes bookings based on user queries."""
     
-    def __init__(self):
-        """Initialize booking proposer."""
-        self.db_retriever = DatabaseRetriever()
+    def __init__(self, app=None):
+        """
+        Initialize booking proposer.
+        
+        Args:
+            app: Flask application instance (optional, needed for MCP)
+        """
+        self.db_retriever = DatabaseRetriever(app=app)
         self.role_filter = RoleFilter()
     
     def extract_booking_intent(self, query: str) -> Optional[Dict]:

@@ -22,6 +22,7 @@ class RegistrationForm(FlaskForm):
     first_name = StringField('First Name', validators=[Optional(), Length(max=50)])
     last_name = StringField('Last Name', validators=[Optional(), Length(max=50)])
     department = StringField('Department', validators=[Optional(), Length(max=100)])
+    role = SelectField('Role', choices=[('student', 'Student'), ('staff', 'Staff'), ('admin', 'Admin')], validators=[DataRequired()], default='student')
 
 class BookingForm(FlaskForm):
     """Booking form with CSRF protection."""
@@ -130,7 +131,8 @@ class AdminUserForm(FlaskForm):
     """Admin form to create/edit users."""
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     username = StringField('Username', validators=[DataRequired(), Length(max=80)])
-    password = PasswordField('Password', validators=[Optional(), Length(min=6)])
+    password = PasswordField('Password', validators=[Optional(), Length(min=6)], 
+                             description='Required when creating a new user. Leave blank when editing to keep existing password.')
     first_name = StringField('First Name', validators=[Optional(), Length(max=50)])
     last_name = StringField('Last Name', validators=[Optional(), Length(max=50)])
     department = StringField('Department', validators=[Optional(), Length(max=100)])

@@ -136,9 +136,25 @@
                             This resource has reached its capacity for the requested time period.
                             {% endif %}
                             <br>
-                            <a href="{{ url_for('resources.join_waitlist', id=resource.id) }}" class="btn btn-warning btn-sm mt-2">
+                            <a href="#" id="join-waitlist-link" class="btn btn-warning btn-sm mt-2" onclick="joinWaitlistWithDates(event)">
                                 Join Waitlist Instead
                             </a>
+                            <script>
+                                function joinWaitlistWithDates(event) {
+                                    event.preventDefault();
+                                    const startDate = document.getElementById('start_date').value;
+                                    const endDate = document.getElementById('end_date').value;
+                                    const baseUrl = "{{ url_for('resources.join_waitlist', id=resource.id) }}";
+                                    let url = baseUrl;
+                                    if (startDate || endDate) {
+                                        const params = new URLSearchParams();
+                                        if (startDate) params.append('start_date', startDate);
+                                        if (endDate) params.append('end_date', endDate);
+                                        url += '?' + params.toString();
+                                    }
+                                    window.location.href = url;
+                                }
+                            </script>
                         </div>
                         {% endif %}
                         

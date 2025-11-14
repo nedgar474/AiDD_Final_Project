@@ -228,6 +228,9 @@ def view(id):
             resource_id=resource.id,
             status='active'
         ).order_by(Booking.start_date.asc()).all()
+        # Auto-cancel expired waitlist entries before checking
+        waitlist_dao.cancel_expired_entries()
+        
         user_waitlist = Waitlist.query.filter_by(
             user_id=current_user.id,
             resource_id=resource.id,
@@ -665,6 +668,16 @@ def join_waitlist(id):
         return redirect(url_for('resources.search'))
     
     form = WaitlistForm()
+    
+    # Pre-populate form with query parameters if provided (from booking page)
+    if request.method == 'GET':
+        start_date_param = request.args.get('start_date', '').strip()
+        end_date_param = request.args.get('end_date', '').strip()
+        
+        if start_date_param:
+            form.start_date.data = start_date_param
+        if end_date_param:
+            form.end_date.data = end_date_param
     
     if form.validate_on_submit():
         start_date = form.parsed_start_date

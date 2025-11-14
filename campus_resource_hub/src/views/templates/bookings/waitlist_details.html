@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Waitlist Details - Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('booking.list') }}">My Bookings</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Waitlist Details</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Waitlist Request Details</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Resource:</dt>
+                        <dd class="col-sm-8">
+                            <a href="{{ url_for('resources.view', id=waitlist_entry.resource.id) }}">
+                                {{ waitlist_entry.resource.title }}
+                            </a>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Category:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.resource.category }}</dd>
+                        
+                        <dt class="col-sm-4">Requested Start:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.requested_start_date|datetime }}</dd>
+                        
+                        <dt class="col-sm-4">Requested End:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.requested_end_date|datetime }}</dd>
+                        
+                        <dt class="col-sm-4">Duration:</dt>
+                        <dd class="col-sm-8">
+                            {% set duration = (waitlist_entry.requested_end_date - waitlist_entry.requested_start_date).total_seconds() / 3600 %}
+                            {{ "%.1f"|format(duration) }} hour{{ 's' if duration != 1 else '' }}
+                        </dd>
+                        
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ 'warning' if waitlist_entry.status == 'pending' else 'success' if waitlist_entry.status == 'notified' else 'secondary' }}">
+                                {{ waitlist_entry.status|title }}
+                            </span>
+                        </dd>
+                        
+                        {% if waitlist_entry.notes %}
+                        <dt class="col-sm-4">Notes:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.notes }}</dd>
+                        {% endif %}
+                        
+                        <dt class="col-sm-4">Created:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.created_at|datetime }}</dd>
+                        
+                        {% if waitlist_entry.notified_at %}
+                        <dt class="col-sm-4">Notified:</dt>
+                        <dd class="col-sm-8">{{ waitlist_entry.notified_at|datetime }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Resource Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Location:</strong> {{ waitlist_entry.resource.location or 'N/A' }}</p>
+                    {% if waitlist_entry.resource.capacity %}
+                    <p><strong>Capacity:</strong> {{ waitlist_entry.resource.capacity }} people</p>
+                    {% endif %}
+                    <p>
+                        <span class="badge bg-{{ 'success' if waitlist_entry.resource.is_available else 'danger' }}">
+                            {{ 'Available' if waitlist_entry.resource.is_available else 'Unavailable' }}
+                        </span>
+                    </p>
+                    <a href="{{ url_for('resources.view', id=waitlist_entry.resource.id) }}" class="btn btn-primary w-100 mb-2">
+                        View Resource
+                    </a>
+                    
+                    {% if waitlist_entry.user_id == current_user.id and waitlist_entry.status == 'pending' %}
+                    <button type="button" class="btn btn-danger w-100 mt-2" data-bs-toggle="modal" data-bs-target="#cancelWaitlistModal">
+                        <i class="fas fa-times-circle"></i> Cancel Waitlist Request
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Waitlist Modal -->
+{% if waitlist_entry.user_id == current_user.id and waitlist_entry.status == 'pending' %}
+<div class="modal fade" id="cancelWaitlistModal" tabindex="-1" aria-labelledby="cancelWaitlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelWaitlistModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Cancel Waitlist Request
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-calendar-times fa-3x text-danger"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-2">Are you sure you want to cancel this waitlist request?</h6>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Resource:</strong> {{ waitlist_entry.resource.title }}</p>
+                                <p class="mb-1"><strong>Requested Date:</strong> {{ waitlist_entry.requested_start_date|datetime }}</p>
+                                <p class="mb-0"><strong>Duration:</strong> 
+                                    {% set duration = (waitlist_entry.requested_end_date - waitlist_entry.requested_start_date).total_seconds() / 3600 %}
+                                    {{ "%.1f"|format(duration) }} hour{{ 's' if duration != 1 else '' }}
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">
+                            <small>You will no longer be notified when this resource becomes available. You can create a new waitlist request if needed.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Keep Waitlist Request
+                </button>
+                <form method="POST" action="{{ url_for('booking.cancel_waitlist', id=waitlist_entry.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="redirect_to_resource" value="true"/>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-1"></i> Yes, Cancel Request
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

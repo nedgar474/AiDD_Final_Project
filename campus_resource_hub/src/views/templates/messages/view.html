@@ -32,7 +32,7 @@
             <p style="white-space: pre-wrap;">{{ message.body }}</p>
         </div>
         <div class="card-footer d-flex gap-2">
-            <a href="{{ url_for('message.compose') }}" class="btn btn-primary">Reply</a>
+            <a href="{{ url_for('message.compose', reply_to=message.id) }}" class="btn btn-primary">Reply</a>
             {% if not message.is_flagged %}
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#flagModal">Flag for Review</button>
             {% else %}

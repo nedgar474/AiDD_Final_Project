@@ -217,7 +217,15 @@
                                     {% endfor %}
                                 </div>
                             </div>
-                            <p class="mb-0">{{ review.comment }}</p>
+                            {% if review.review_text %}
+                            <div class="mt-2">
+                                <p class="mb-0">{{ review.review_text }}</p>
+                            </div>
+                            {% else %}
+                            <div class="mt-2">
+                                <p class="text-muted mb-0"><em>No review text provided.</em></p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -294,9 +302,12 @@
                 <div class="alert alert-warning">
                     <h5 class="alert-heading">You're on the Waitlist</h5>
                     <p>You have a pending waitlist request for this resource.</p>
-                    <p class="mb-0">
+                    <p class="mb-2">
                         <small>Requested: {{ user_waitlist.requested_start_date|datetime }} - {{ user_waitlist.requested_end_date|datetime }}</small>
                     </p>
+                    <a href="{{ url_for('booking.waitlist_details', id=user_waitlist.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-info-circle me-1"></i> View Details
+                    </a>
                 </div>
                 {% endif %}
                 

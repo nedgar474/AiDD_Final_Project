@@ -12,7 +12,7 @@ sys.path.insert(0, str(root_path))
 
 from src.app import create_app
 from src.extensions import db, bcrypt
-from src.models import User, Resource, Booking
+from src.models import User, Resource, Booking, ResourceImage
 
 def create_users():
     """Create test users with different roles."""
@@ -92,7 +92,7 @@ def create_users():
     return users
 
 def create_resources():
-    """Create test resources (rooms, equipment, etc.)."""
+    """Create test resources (rooms, equipment, etc.) with their images."""
     resources_data = [
         {
             'title': 'Main Library Study Room A',
@@ -101,88 +101,146 @@ def create_resources():
             'location': 'Library, Floor 2, Room 201',
             'capacity': 6,
             'is_available': True,
-            'is_featured': True
+            'is_featured': True,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_3_20251112_044448_028747_IMG_1981.jpg',
+                'uploads/resource_3_20251112_044448_028747_IMG_1982.jpg'
+            ]
         },
         {
-            'name': 'Main Library Study Room B',
+            'title': 'Main Library Study Room B',
             'description': 'Quiet study room with comfortable seating. Ideal for individual or small group study.',
             'category': 'Study Room',
             'location': 'Library, Floor 2, Room 202',
             'capacity': 4,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_4_20251112_044514_740008_IMG_1972.jpg',
+                'uploads/resource_4_20251112_044514_744029_IMG_1973.jpg'
+            ]
         },
         {
-            'name': 'Computer Lab 1',
+            'title': 'Computer Lab 1',
             'description': 'Fully equipped computer lab with 30 workstations. Software includes Microsoft Office, Adobe Creative Suite, and development tools.',
             'category': 'Computer Lab',
             'location': 'Science Building, Floor 1, Room 101',
             'capacity': 30,
             'is_available': True,
-            'is_featured': True
+            'is_featured': True,
+            'status': 'published',
+            'equipment': 'Computers, Mice, Computer Mice',
+            'images': [
+                'uploads/resource_5_20251112_043748_252361_IMG_1986.jpg',
+                'uploads/resource_5_20251112_043748_254372_IMG_1987.jpg'
+            ]
         },
         {
-            'name': 'Computer Lab 2',
+            'title': 'Computer Lab 2',
             'description': 'Computer lab with 20 workstations. Available for general use and workshops.',
             'category': 'Computer Lab',
             'location': 'Science Building, Floor 1, Room 102',
             'capacity': 20,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_6_20251112_043824_460447_IMG_1988.jpg',
+                'uploads/resource_6_20251112_043824_464508_IMG_1989.jpg'
+            ]
         },
         {
-            'name': 'Conference Room Alpha',
+            'title': 'Conference Room Alpha',
             'description': 'Large conference room with video conferencing capabilities. Perfect for presentations and meetings.',
             'category': 'Conference Room',
             'location': 'Administration Building, Floor 3, Room 301',
             'capacity': 20,
             'is_available': True,
-            'is_featured': True
+            'is_featured': True,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_7_20251109_232315_226579_IDO_IU-Hodge-Hall_CollabRoom_8165_2880-860x550.webp',
+                'uploads/resource_7_20251112_044358_936065_IMG_1984.jpg',
+                'uploads/resource_7_20251112_044358_936065_IMG_1985.jpg'
+            ]
         },
         {
-            'name': 'Conference Room Beta',
+            'title': 'Conference Room Beta',
             'description': 'Medium-sized conference room with projector and whiteboard.',
             'category': 'Conference Room',
             'location': 'Administration Building, Floor 3, Room 302',
             'capacity': 12,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_8_20251112_044413_102023_IMG_1977.jpg'
+            ]
         },
         {
-            'name': 'Projector Set A',
+            'title': 'Projector Set A',
             'description': 'Portable projector with screen and cables. Suitable for presentations and events.',
             'category': 'Equipment',
             'location': 'Equipment Storage, Room 105',
             'capacity': None,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_9_20251112_044719_564700_projector.webp'
+            ]
         },
         {
-            'name': 'Laptop Cart',
+            'title': 'Laptop Cart',
             'description': 'Mobile cart with 15 laptops. Available for classroom use.',
             'category': 'Equipment',
             'location': 'IT Services, Room 205',
             'capacity': 15,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_10_20251112_044936_524708_cart.webp'
+            ]
         },
         {
-            'name': 'Gymnasium Court 1',
+            'title': 'Gymnasium Court 1',
             'description': 'Full-size basketball court. Available for sports activities and events.',
             'category': 'Sports Facility',
             'location': 'Recreation Center, Main Floor',
             'capacity': 50,
             'is_available': True,
-            'is_featured': True
+            'is_featured': True,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_11_20251112_044428_688183_IMG_1956.jpg',
+                'uploads/resource_11_20251112_044428_688183_IMG_1957.jpg'
+            ]
         },
         {
-            'name': 'Music Practice Room',
+            'title': 'Music Practice Room',
             'description': 'Soundproof practice room with piano. Available for music students.',
             'category': 'Practice Room',
             'location': 'Arts Building, Floor 2, Room 208',
             'capacity': 3,
             'is_available': True,
-            'is_featured': False
+            'is_featured': False,
+            'status': 'published',
+            'equipment': None,
+            'images': [
+                'uploads/resource_12_20251112_044540_465413_IMG_1974.jpg',
+                'uploads/resource_12_20251112_044540_475988_IMG_1980.jpg'
+            ]
         }
     ]
     
@@ -198,15 +256,15 @@ def create_resources():
         # Use raw SQL to insert with all columns including old ones
         # This is needed because the database still has old columns with NOT NULL constraints
         from sqlalchemy import text
-        status_value = 'available' if resource_data.get('is_available', True) else 'unavailable'
+        status_value = resource_data.get('status', 'published')
         type_value = resource_data.get('category', 'General')
         
         result = db.session.execute(
             text("""
                 INSERT INTO resources (title, name, description, category, type, location, image_url, capacity, 
-                                      is_available, is_featured, status, created_at, updated_at)
+                                      is_available, is_featured, requires_approval, status, equipment, created_at, updated_at)
                 VALUES (:title, :title, :description, :category, :type, :location, :image_url, :capacity,
-                        :is_available, :is_featured, :status, :created_at, :updated_at)
+                        :is_available, :is_featured, :requires_approval, :status, :equipment, :created_at, :updated_at)
             """),
             {
                 'title': resource_data['title'],
@@ -218,7 +276,9 @@ def create_resources():
                 'capacity': resource_data.get('capacity'),
                 'is_available': 1 if resource_data.get('is_available', True) else 0,
                 'is_featured': 1 if resource_data.get('is_featured', False) else 0,
+                'requires_approval': 1 if resource_data.get('requires_approval', False) else 0,
                 'status': status_value,
+                'equipment': resource_data.get('equipment'),
                 'created_at': datetime.utcnow(),
                 'updated_at': datetime.utcnow()
             }
@@ -227,8 +287,30 @@ def create_resources():
         
         # Get the created resource
         resource = Resource.query.filter_by(title=resource_data['title']).first()
+        
+        # Create ResourceImage records for this resource
+        images = resource_data.get('images', [])
+        if images:
+            for idx, image_path in enumerate(images, start=1):
+                # Check if image record already exists
+                existing_image = ResourceImage.query.filter_by(
+                    resource_id=resource.id,
+                    image_path=image_path
+                ).first()
+                
+                if not existing_image:
+                    image = ResourceImage(
+                        resource_id=resource.id,
+                        image_path=image_path,
+                        display_order=idx
+                    )
+                    db.session.add(image)
+                    print(f"  Added image {idx}: {image_path}")
+                else:
+                    print(f"  Image already exists: {image_path}")
+        
         resources.append(resource)
-        print(f"Created resource: {resource_data['title']}")
+        print(f"Created resource: {resource_data['title']} with {len(images)} image(s)")
     
     return resources
 
