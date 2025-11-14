@@ -82,3 +82,7 @@ docs/context/AiDD/IU_Style_Guide.md
 docs/context/AiDD/project_summary.md
 tests/TEST_REQUIREMENTS_COMPLIANCE.md
 
+# PM folder PDF files (annotated documents)
+docs/context/PM/annotated-*.pdf
+docs/context/PM/annotated-*.docx.pdf
+
